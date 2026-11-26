@@ -1,0 +1,13 @@
+{
+  "name": "ui-vault",
+  "displayName": "UI Vault · 前端美学素材库",
+  "version": "0.1.0",
+  "repository": "https://github.com/5154sj/ui-vault",
+  "description": "Personal frontend UI & motion reference library stored at C:\\UI\\ui-vault with two dedicated skills: ui-deconstruct (capture & deconstruct screenshots/videos/apps/URLs into structured design tokens, runnable HTML/CSS previews, and sync to GitHub) and ui-recall (search and apply saved UI styles or components in any frontend task).",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "帮我拆解这张截图/视频里的 UI 和动效，标准化存入 UI Vault 并同步到 GitHub",
+    "从我的 UI Vault 里挑一个最适合极简暗黑控制台的风格来设计这个页面",
+    "查看我目前 UI Vault 素材库里收藏了哪些界面和动效"
+  ]
+}

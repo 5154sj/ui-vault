@@ -1,0 +1,20 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+
+# Keep large raw screen recordings local so git push stays fast
+# (keyframes, screenshots, GIFs <= 5MB, specs, tokens, and preview.html are committed)
+items/*/assets/raw/
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.webm
+
+# Temp / scratch
+*.tmp
+*.log
+node_modules/

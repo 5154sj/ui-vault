@@ -1,0 +1,11 @@
+{
+  "id": "2026-11-example-item",
+  "title": "示例条目名称",
+  "kind": "component",
+  "theme": "dark",
+  "summary": "一句话概括最惊艳的视觉或动效特征。",
+  "tags": ["minimal", "dark", "card"],
+  "source": "来源软件或网站",
+  "stack": ["html-css"],
+  "createdAt": "2026-11-26"
+}

@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proximity RGB Prism Rim · UI Vault Preview</title>
+    <style>
+      @property --rgb-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: true;
+      }
+
+      :root {
+        --bg-canvas: #111113;
+        --bg-surface: #1a1a1d;
+        --bg-control: #242429;
+        --border-idle: rgba(255, 255, 255, 0.09);
+        --text-primary: #f4f4f6;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --rim-width: 1.5px;
+        --card-radius: 16px;
+        --glow-radius: 230px;
+        --flow-speed: 4.5s;
+        --bloom-strength: 0.55;
+        --rgb-gradient: conic-gradient(
+          from var(--rgb-angle),
+          #38bdf8,
+          #818cf8,
+          #e879f9,
+          #fb7185,
+          #fbbf24,
+          #34d399,
+          #38bdf8
+        );
+      }
+
+      @keyframes rgb-spin {
+        from {
+          --rgb-angle: 0deg;
+        }
+        to {
+          --rgb-angle: 360deg;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(60% 45% at 50% 100%, rgba(251, 191, 36, 0.06), transparent 70%),
+          radial-gradient(50% 40% at 80% 0%, rgba(56, 189, 248, 0.05), transparent 65%),
+          var(--bg-canvas);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 36px 24px 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        animation: rgb-spin var(--flow-speed) linear infinite;
+      }
+
+      .header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .header h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .mode-btn {
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-idle);
+        border-radius: 999px;
+        padding: 6px 13px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      }
+
+      .mode-btn:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .mode-btn.active {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.28);
+      }
+
+      /* =====================================================================
+         CORE EFFECT: Proximity & Hover RGB Prism Rim Light
+         ===================================================================== */
+      .rgb-rim {
+        --mx: 50%;
+        --my: 50%;
+        --prox: 0;
+        --hovered: 0;
+        position: relative;
+        border-radius: var(--card-radius);
+        isolation: isolate;
+      }
+
+      /* 1. Soft external ambient RGB bloom following cursor */
+      .rgb-rim::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: calc(var(--card-radius) + 2px);
+        background: var(--rgb-gradient);
+        filter: blur(16px);
+        opacity: calc(var(--prox) * var(--bloom-strength));
+        pointer-events: none;
+        z-index: -2;
+        transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+        -webkit-mask-image: radial-gradient(
+          var(--glow-radius) circle at var(--mx) var(--my),
+          #000 0%,
+          rgba(0, 0, 0, 0.45) 45%,
+          transparent 78%
+        );
+        mask-image: radial-gradient(
+          var(--glow-radius) circle at var(--mx) var(--my),
+          #000 0%,
+          rgba(0, 0, 0, 0.45) 45%,
+          transparent 78%
+        );
+      }
+
+      /* 2. Crisp 1.5px RGB LED rim strip masked strictly to border */
+      .rgb-rim-border {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: var(--rim-width);
+        pointer-events: none;
+        z-index: 3;
+        background: var(--rgb-gradient);
+        opacity: var(--prox);
+        transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+      }
+
+      /* Proximity spotlight mode: restricts the RGB rim to the nearest segment around cursor */
+      .mode-proximity .rgb-rim-border::after {
+        content: none;
+      }
+
+      .mode-proximity .rgb-rim-border {
+        background:
+          radial-gradient(
+            var(--glow-radius) circle at var(--mx) var(--my),
+            transparent 0%,
+            transparent 58%,
+            rgba(17, 17, 19, 0.92) 92%
+          ),
+          var(--rgb-gradient);
+      }
+
+      /* Full-ring hover mode: proximity lights nearest edge, direct hover lights FULL flowing RGB ring */
+      .mode-hybrid .rgb-rim[data-hovered='0'] .rgb-rim-border {
+        background:
+          radial-gradient(
+            var(--glow-radius) circle at var(--mx) var(--my),
+            transparent 0%,
+            transparent 55%,
+            rgba(17, 17, 19, 0.94) 90%
+          ),
+          var(--rgb-gradient);
+      }
+
+      .mode-hybrid .rgb-rim[data-hovered='1']::before {
+        -webkit-mask-image: none;
+        mask-image: none;
+        opacity: calc(var(--bloom-strength) * 0.72);
+      }
+
+      /* 3. Inner surface base + faint cursor sheen */
+      .rgb-rim-inner {
+        position: relative;
+        z-index: 1;
+        border-radius: inherit;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-idle);
+        box-shadow:
+          0 12px 32px rgba(0, 0, 0, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+      }
+
+      .rgb-rim-inner::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          260px circle at var(--mx) var(--my),
+          rgba(255, 255, 255, 0.06),
+          transparent 70%
+        );
+        opacity: var(--hovered);
+        transition: opacity 220ms ease;
+      }
+
+      /* =====================================================================
+         DEMO 1: Chat Prompt Box (inspired by Antigravity Obsidian Prism)
+         ===================================================================== */
+      .prompt-box .rgb-rim-inner {
+        padding: 18px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .prompt-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 15px;
+        line-height: 1.5;
+        font-family: inherit;
+        resize: none;
+      }
+
+      .prompt-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .prompt-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .footer-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-secondary);
+        font-size: 12.5px;
+        cursor: pointer;
+        transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+      }
+
+      .pill-btn:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .icon-circle {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+      }
+
+      .send-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: none;
+        background: #f4f4f6;
+        color: #111113;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.16s ease, opacity 0.16s ease;
+      }
+
+      .send-btn:hover {
+        transform: scale(1.06);
+      }
+
+      .metric {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+      }
+
+      .metric strong {
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      /* =====================================================================
+         DEMO 2: Bento Grid (move cursor between cards to watch multi-edge glow)
+         ===================================================================== */
+      .section-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: -16px;
+      }
+
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      @media (max-width: 720px) {
+        .bento-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .bento-card .rgb-rim-inner {
+        padding: 20px;
+        min-height: 152px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .bento-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+      }
+
+      .bento-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+
+      .bento-desc {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body class="mode-hybrid">
+    <main class="page">
+      <header class="header">
+        <div>
+          <h1>Proximity RGB Prism Rim</h1>
+          <p>把鼠标移到输入框/卡片周围或上方，感受实时感应的流动 RGB 棱镜灯带。</p>
+        </div>
+        <div class="controls">
+          <button class="mode-btn active" data-mode="mode-hybrid">靠近局部 + 悬浮整圈（推荐）</button>
+          <button class="mode-btn" data-mode="mode-proximity">纯聚光靠近感应</button>
+        </div>
+      </header>
+
+      <div class="section-label">Prompt Input Box Demo</div>
+      <section class="rgb-rim prompt-box" data-hovered="0">
+        <div class="rgb-rim-border"></div>
+        <div class="rgb-rim-inner">
+          <textarea
+            class="prompt-input"
+            rows="2"
+            placeholder="把鼠标慢慢靠近这个输入框的边缘，再悬浮到上面试试..."
+          >鼠标悬浮在周围和上面时，边缘会平滑亮起流动的 RGB 棱镜灯带</textarea>
+
+          <div class="prompt-footer">
+            <div class="footer-group">
+              <button class="pill-btn icon-circle" title="添加附件">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <button class="pill-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3L14.4 9.6L21 12L14.4 14.4L12 21L9.6 14.4L3 12L9.6 9.6L12 3Z" />
+                </svg>
+                <span>Gemini 4 Neon</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="footer-group">
+              <span class="metric"><strong>97.2</strong> tok/s</span>
+              <span class="metric">缓存 <strong>88.0%</strong></span>
+              <button class="send-btn" title="发送">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="6 11 12 5 18 11" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-label">Bento Grid Proximity Reveal（在卡片间隙移动鼠标，相邻边缘同步点亮）</div>
+      <section class="bento-grid">
+        <article class="rgb-rim bento-card" data-hovered="0">
+          <div class="rgb-rim-border"></div>
+          <div class="rgb-rim-inner">
+            <span class="bento-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 3 21 8 12 13 3 8 12 3" />
+                <polyline points="3 12.5 12 17.5 21 12.5" />
+                <polyline points="3 17 12 22 21 17" />
+              </svg>
+            </span>
+            <div>
+              <h2 class="bento-title">1.5px 精准镂空灯带</h2>
+              <p class="bento-desc">通过 CSS mask-composite 精确裁切，只点亮极细圆角描边，绝不污染内容区。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="rgb-rim bento-card" data-hovered="0">
+          <div class="rgb-rim-border"></div>
+          <div class="rgb-rim-inner">
+            <span class="bento-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="3" x2="12" y2="5" />
+                <line x1="12" y1="19" x2="12" y2="21" />
+              </svg>
+            </span>
+            <div>
+              <h2 class="bento-title">周围 230px 距离感应</h2>
+              <p class="bento-desc">鼠标未进入卡片前即根据到四边的欧氏距离平滑点亮最近边缘。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="rgb-rim bento-card" data-hovered="0">
+          <div class="rgb-rim-border"></div>
+          <div class="rgb-rim-inner">
+            <span class="bento-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3L14.4 9.6L21 12L14.4 14.4L12 21L9.6 14.4L3 12L9.6 9.6L12 3Z" />
+              </svg>
+            </span>
+            <div>
+              <h2 class="bento-title">环境光晕 + 表面微反光</h2>
+              <p class="bento-desc">外层柔和散射 Bloom 配合内层极淡指针径向反光，质感接近真实阳极氧化边缘。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const PROXIMITY_RADIUS = 230;
+      const cards = Array.from(document.querySelectorAll('.rgb-rim'));
+      const pointer = { x: -9999, y: -9999, active: false };
+
+      const states = cards.map(() => ({ prox: 0, targetProx: 0 }));
+
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          pointer.x = e.clientX;
+          pointer.y = e.clientY;
+          pointer.active = true;
+        },
+        { passive: true },
+      );
+
+      window.addEventListener('pointerleave', () => {
+        pointer.active = false;
+      });
+
+      function tick() {
+        for (let i = 0; i < cards.length; i++) {
+          const el = cards[i];
+          const st = states[i];
+
+          if (!pointer.active) {
+            st.targetProx = 0;
+            el.dataset.hovered = '0';
+          } else {
+            const rect = el.getBoundingClientRect();
+            const relX = pointer.x - rect.left;
+            const relY = pointer.y - rect.top;
+
+            // Euclidean distance from pointer to rectangle exterior (0 when inside)
+            const dx = Math.max(rect.left - pointer.x, 0, pointer.x - rect.right);
+            const dy = Math.max(rect.top - pointer.y, 0, pointer.y - rect.bottom);
+            const dist = Math.hypot(dx, dy);
+            const inside = dist === 0;
+
+            el.style.setProperty('--mx', `${relX.toFixed(1)}px`);
+            el.style.setProperty('--my', `${relY.toFixed(1)}px`);
+            el.dataset.hovered = inside ? '1' : '0';
+            el.style.setProperty('--hovered', inside ? '1' : '0');
+
+            const normalized = Math.max(0, 1 - dist / PROXIMITY_RADIUS);
+            st.targetProx = inside ? 1 : Math.pow(normalized, 1.45);
+          }
+
+          // Smooth damping interpolation
+          st.prox += (st.targetProx - st.prox) * 0.22;
+          if (Math.abs(st.prox) < 0.002) st.prox = 0;
+          el.style.setProperty('--prox', st.prox.toFixed(3));
+        }
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+
+      // Mode switch buttons
+      document.querySelectorAll('.mode-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.body.className = btn.dataset.mode;
+        });
+      });
+    </script>
+  </body>
+</html>

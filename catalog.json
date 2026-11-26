@@ -1,7 +1,40 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-26T11:30:59.695Z",
+  "updatedAt": "2026-11-26T11:58:01.714Z",
   "repoPath": "C:\\UI\\ui-vault",
-  "count": 0,
-  "items": []
+  "count": 1,
+  "items": [
+    {
+      "id": "2026-11-rgb-prism-rim-hover",
+      "dir": "items/2026-11-rgb-prism-rim-hover",
+      "title": "鼠标靠近/悬浮 RGB 棱镜灯带边框（Proximity RGB Rim）",
+      "kind": "motion",
+      "theme": "dark",
+      "summary": "暗黑磨砂容器在鼠标靠近周围（Proximity）或悬浮上方时，沿边缘实时点亮跟随指针的流动 RGB 棱镜灯带与柔和环境光晕。",
+      "tags": [
+        "rgb",
+        "prism",
+        "rim-light",
+        "proximity-hover",
+        "border-glow",
+        "dark",
+        "prompt-box",
+        "card",
+        "motion"
+      ],
+      "source": "Obsidian Prism 风格参考截图 + 鼠标靠近/悬浮 RGB 灯带需求",
+      "stack": [
+        "html-css",
+        "react-tailwind"
+      ],
+      "createdAt": "2026-11-26",
+      "files": {
+        "spec": "items/2026-11-rgb-prism-rim-hover/spec.md",
+        "tokens": "items/2026-11-rgb-prism-rim-hover/tokens.json",
+        "preview": "items/2026-11-rgb-prism-rim-hover/preview.html",
+        "snippet": "items/2026-11-rgb-prism-rim-hover/snippet.tsx",
+        "previewImage": null
+      }
+    }
+  ]
 }

@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Edge Mascots · UI Vault Preview</title>
+    <style>
+      :root {
+        --bg-canvas: #111112;
+        --bg-surface: #1b1b1d;
+        --border-subtle: rgba(255, 255, 255, 0.11);
+        --text-primary: #f4f4f6;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(60% 45% at 65% 25%, rgba(155, 135, 245, 0.06), transparent 65%),
+          radial-gradient(55% 45% at 35% 85%, rgba(217, 120, 86, 0.07), transparent 65%),
+          var(--bg-canvas);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        user-select: none;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 36px 24px 72px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .header h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        font-size: 12.5px;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+      }
+
+      .pill-btn:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.24);
+        background: #232327;
+      }
+
+      .pill-btn:active {
+        transform: scale(0.96);
+      }
+
+      .status-feed {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 12px;
+        color: var(--text-secondary);
+        min-height: 36px;
+      }
+
+      .status-tag {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        color: #f4f4f6;
+        font-size: 11.5px;
+      }
+
+      /* =====================================================================
+         STAGE + PROMPT BOX (Mascots live along the top edge!)
+         ===================================================================== */
+      .prompt-stage {
+        position: relative;
+        margin-top: 96px;
+      }
+
+      .pet-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 0;
+        pointer-events: none;
+        z-index: 20;
+      }
+
+      .pet-actor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 48px;
+        height: 42px;
+        margin-left: -24px;
+        margin-top: -39px;
+        pointer-events: auto;
+        cursor: grab;
+        touch-action: none;
+        transform-origin: 50% 92%;
+        will-change: transform;
+      }
+
+      .pet-actor.dragging {
+        cursor: grabbing;
+        z-index: 40;
+      }
+
+      .pet-actor svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+      }
+
+      .cactus-prop {
+        position: absolute;
+        top: -26px;
+        right: 18px;
+        width: 24px;
+        height: 28px;
+        pointer-events: auto;
+        cursor: pointer;
+        transform-origin: 50% 100%;
+        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 15;
+      }
+
+      .cactus-prop:hover {
+        transform: scale(1.12);
+      }
+
+      .cactus-prop.bloom {
+        transform: scale(1.24, 0.9);
+      }
+
+      .cactus-prop svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+      }
+
+      .treat-item {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        margin-left: -8px;
+        margin-top: -15px;
+        pointer-events: none;
+        z-index: 18;
+      }
+
+      .treat-item svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+      }
+
+      .fx-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 0;
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      .fx-particle {
+        position: absolute;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .fx-particle svg {
+        display: block;
+        shape-rendering: crispEdges;
+      }
+
+      .pet-bubble {
+        position: absolute;
+        left: 50%;
+        bottom: 44px;
+        transform: translateX(-50%);
+        background: #242429;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 7px;
+        padding: 3px 7px;
+        font-size: 11px;
+        color: #f4f4f6;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+      }
+
+      .pet-bubble.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+      }
+
+      /* Prompt Box Surface */
+      .prompt-card {
+        position: relative;
+        border-radius: 16px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        box-shadow:
+          0 14px 36px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        padding: 18px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .prompt-textarea {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 14.5px;
+        line-height: 1.55;
+        font-family: inherit;
+        resize: none;
+        user-select: text;
+      }
+
+      .prompt-textarea::placeholder {
+        color: var(--text-muted);
+      }
+
+      .prompt-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .footer-left,
+      .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .send-circle {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: none;
+        background: #f4f4f6;
+        color: #111112;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+
+      .send-circle:hover {
+        transform: scale(1.07);
+      }
+
+      .guide-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+        gap: 10px;
+      }
+
+      .guide-card {
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.55;
+      }
+
+      .guide-card strong {
+        display: block;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div>
+          <h1>Pixel Edge Mascots · 边缘像素双吉祥物</h1>
+          <p>复刻右上角珊瑚小蟹与薰衣草小猫 + 迷你仙人掌，支持多动作点击、物理拖拽抛掷、叠罗汉与打字互动。</p>
+        </div>
+        <div class="toolbar">
+          <button class="pill-btn" id="btn-treat">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="4" y="4" width="8" height="8" fill="#FBBF24" />
+              <rect x="6" y="6" width="2" height="2" fill="#92400E" />
+              <rect x="9" y="8" width="2" height="2" fill="#92400E" />
+            </svg>
+            撒零食竞速
+          </button>
+          <button class="pill-btn" id="btn-stack">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="4" y="2" width="8" height="5" fill="#9B87F5" />
+              <rect x="3" y="8" width="10" height="6" fill="#D97856" />
+            </svg>
+            叠罗汉
+          </button>
+          <button class="pill-btn" id="btn-party">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="7" y="1" width="2" height="14" fill="#38BDF8" />
+              <rect x="1" y="7" width="14" height="2" fill="#38BDF8" />
+            </svg>
+            一起跳舞
+          </button>
+          <button class="pill-btn" id="btn-reset">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <polyline points="20 4 20 9 15 9" />
+            </svg>
+            归位
+          </button>
+        </div>
+      </header>
+
+      <div class="status-feed">
+        <span id="status-text">试着点一下右上角的珊瑚小蟹或紫色小猫，或者把一只拎起来放到另一只头上！</span>
+        <span class="status-tag" id="action-counter">CLICKS: 0</span>
+      </div>
+
+      <section class="prompt-stage" id="prompt-stage">
+        <div class="pet-layer" id="pet-layer">
+          <!-- Potted Pixel Cactus on right corner -->
+          <div class="cactus-prop" id="cactus" title="点一下让仙人掌开花（把宠物拖过来会被扎到弹跳！）">
+            <svg viewBox="0 0 12 14">
+              <!-- Flower on top -->
+              <rect x="5" y="1" width="2" height="2" fill="#E57A54" id="cactus-flower" />
+              <!-- Main stem -->
+              <rect x="5" y="3" width="2" height="7" fill="#73A98E" />
+              <rect x="6" y="3" width="1" height="7" fill="#55876F" />
+              <!-- Left arm -->
+              <rect x="2" y="5" width="1" height="3" fill="#73A98E" />
+              <rect x="3" y="7" width="2" height="1" fill="#73A98E" />
+              <!-- Right arm -->
+              <rect x="9" y="4" width="1" height="3" fill="#55876F" />
+              <rect x="7" y="6" width="2" height="1" fill="#55876F" />
+              <!-- Terracotta pot -->
+              <rect x="3" y="10" width="6" height="1" fill="#9C7B68" />
+              <rect x="4" y="11" width="4" height="3" fill="#7C6253" />
+            </svg>
+          </div>
+        </div>
+        <div class="fx-layer" id="fx-layer"></div>
+
+        <div class="prompt-card" id="prompt-card">
+          <textarea
+            class="prompt-textarea"
+            id="demo-input"
+            rows="2"
+            placeholder="在这里打字试试！每敲一个字，头顶的两只小吉祥物都会跟着节拍欢快点头..."
+          ></textarea>
+          <div class="prompt-footer">
+            <div class="footer-left">
+              <span class="pill-btn" style="cursor: default">像素宠物引擎 · 60 FPS</span>
+              <span class="pill-btn" style="cursor: default">可拖拽 · 可抛掷 · 可叠罗汉</span>
+            </div>
+            <div class="footer-right">
+              <button class="send-circle" id="btn-send" title="发送（两只宠物会同时起跳欢呼！）">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="6 11 12 5 18 11" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="guide-grid">
+        <div class="guide-card">
+          <strong>7 种点击动作轮换</strong>
+          每次单击依次触发：高跳星星、360° 后空翻、摇摆舞、害羞冒爱心、打盹 Zzz、冲刺急刹、呼叫伙伴击掌。
+        </div>
+        <div class="guide-card">
+          <strong>物理拖拽与抛掷</strong>
+          拎起宠物拖动会随惯性摇摆、小腿乱蹬；甩出松手后遵循重力抛物线并弹跳回边框。
+        </div>
+        <div class="guide-card">
+          <strong>叠罗汉 &amp; 仙人掌彩蛋</strong>
+          把一只拖到另一只头顶松手会直接叠罗汉一起走；拖到仙人掌上会被扎得跳开！
+        </div>
+        <div class="guide-card">
+          <strong>眼神跟随 + 打字节拍</strong>
+          移动鼠标它们会转眼珠偷看你；在输入框打字或点发送按钮，两只都会跟着节奏互动。
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const stageEl = document.getElementById('prompt-stage');
+      const petLayerEl = document.getElementById('pet-layer');
+      const fxLayerEl = document.getElementById('fx-layer');
+      const cactusEl = document.getElementById('cactus');
+      const statusTextEl = document.getElementById('status-text');
+      const counterEl = document.getElementById('action-counter');
+      const demoInputEl = document.getElementById('demo-input');
+
+      const GRAVITY = 0.72;
+      const BOUNCE = 0.42;
+      const ACTIONS = [
+        { id: 'jump', label: '开心高跳' },
+        { id: 'flip', label: '360° 后空翻' },
+        { id: 'dance', label: '像素摇摆舞' },
+        { id: 'blush', label: '害羞冒爱心' },
+        { id: 'nap', label: '趴平打盹' },
+        { id: 'dash', label: '边框疾跑冲刺' },
+        { id: 'highfive', label: '呼叫伙伴击掌' },
+      ];
+
+      let totalClicks = 0;
+      const mouse = { x: -9999, y: -9999, active: false };
+      const particles = [];
+      let activeTreat = null;
+
+      function setStatus(text) {
+        statusTextEl.textContent = text;
+      }
+
+      // Crisp Pixel SVG particle spawner (no emojis!)
+      function spawnPixelFx(x, y, kind, count = 5) {
+        const templates = {
+          star: `<svg width="10" height="10" viewBox="0 0 5 5"><rect x="2" y="0" width="1" height="5" fill="#FBBF24"/><rect x="0" y="2" width="5" height="1" fill="#FBBF24"/><rect x="2" y="2" width="1" height="1" fill="#FEF08A"/></svg>`,
+          heart: `<svg width="12" height="10" viewBox="0 0 7 6"><rect x="1" y="0" width="2" height="1" fill="#FB7185"/><rect x="4" y="0" width="2" height="1" fill="#FB7185"/><rect x="0" y="1" width="7" height="2" fill="#FB7185"/><rect x="1" y="3" width="5" height="1" fill="#FB7185"/><rect x="2" y="4" width="3" height="1" fill="#FB7185"/><rect x="3" y="5" width="1" height="1" fill="#FB7185"/></svg>`,
+          note: `<svg width="10" height="12" viewBox="0 0 5 6"><rect x="2" y="0" width="1" height="5" fill="#38BDF8"/><rect x="3" y="0" width="2" height="1" fill="#38BDF8"/><rect x="0" y="4" width="3" height="2" fill="#38BDF8"/></svg>`,
+          dust: `<svg width="6" height="6" viewBox="0 0 3 3"><rect x="0" y="0" width="3" height="3" fill="rgba(244,244,246,0.55)"/></svg>`,
+          zzz: `<svg width="10" height="10" viewBox="0 0 5 5"><rect x="0" y="0" width="5" height="1" fill="#A1A1AA"/><rect x="3" y="1" width="1" height="1" fill="#A1A1AA"/><rect x="2" y="2" width="1" height="1" fill="#A1A1AA"/><rect x="1" y="3" width="1" height="1" fill="#A1A1AA"/><rect x="0" y="4" width="5" height="1" fill="#A1A1AA"/></svg>`,
+          bang: `<svg width="6" height="12" viewBox="0 0 3 6"><rect x="1" y="0" width="1" height="3" fill="#F97316"/><rect x="1" y="5" width="1" height="1" fill="#F97316"/></svg>`,
+          crumb: `<svg width="6" height="6" viewBox="0 0 2 2"><rect x="0" y="0" width="2" height="2" fill="#FBBF24"/></svg>`,
+        };
+
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement('div');
+          el.className = 'fx-particle';
+          el.innerHTML = templates[kind] || templates.star;
+          fxLayerEl.appendChild(el);
+          const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+          const speed = kind === 'zzz' || kind === 'heart' ? 0.9 + Math.random() * 0.7 : 2.0 + Math.random() * 2.8;
+          particles.push({
+            el,
+            x: x + (Math.random() - 0.5) * 18,
+            y: y + (Math.random() - 0.5) * 10,
+            vx: kind === 'zzz' ? 0.35 : Math.cos(angle) * speed,
+            vy: kind === 'zzz' ? -0.9 : Math.sin(angle) * speed - 0.8,
+            grav: kind === 'zzz' || kind === 'heart' || kind === 'note' ? -0.01 : 0.12,
+            life: 1,
+            decay: kind === 'zzz' ? 0.014 : 0.024 + Math.random() * 0.015,
+          });
+        }
+      }
+
+      function renderSpriteSvg(pet) {
+        const isCoral = pet.species === 'coral';
+        const body = isCoral ? '#D97856' : '#9B87F5';
+        const shade = isCoral ? '#BD6243' : '#7E6AD8';
+        const eyeOffsetX = pet.eyeDx;
+        const eyeOffsetY = pet.eyeDy;
+        const step = pet.legPhase > 0.5 ? 1 : 0;
+        const dangling = pet.dragging ? (Math.sin(performance.now() * 0.03) > 0 ? 1 : 0) : step;
+
+        let eyesSvg = '';
+        if (pet.mood === 'sleep') {
+          eyesSvg = `
+            <rect x="4" y="6" width="2" height="1" fill="#18171A" />
+            <rect x="10" y="6" width="2" height="1" fill="#18171A" />
+          `;
+        } else if (pet.mood === 'happy' || pet.mood === 'blush') {
+          eyesSvg = `
+            <rect x="4" y="5" width="2" height="1" fill="#18171A" />
+            <rect x="10" y="5" width="2" height="1" fill="#18171A" />
+            <rect x="3" y="6" width="1" height="1" fill="#18171A" />
+            <rect x="6" y="6" width="1" height="1" fill="#18171A" />
+            <rect x="9" y="6" width="1" height="1" fill="#18171A" />
+            <rect x="12" y="6" width="1" height="1" fill="#18171A" />
+          `;
+        } else if (pet.mood === 'surprised' || pet.dragging) {
+          eyesSvg = `
+            <rect x="4" y="5" width="2" height="3" fill="#18171A" />
+            <rect x="10" y="5" width="2" height="3" fill="#18171A" />
+            <rect x="4" y="5" width="1" height="1" fill="#FFFFFF" />
+            <rect x="10" y="5" width="1" height="1" fill="#FFFFFF" />
+          `;
+        } else if (pet.blinking) {
+          eyesSvg = `
+            <rect x="4" y="6" width="2" height="1" fill="#18171A" />
+            <rect x="10" y="6" width="2" height="1" fill="#18171A" />
+          `;
+        } else {
+          const lx = Math.max(3.5, Math.min(5.2, 4.5 + eyeOffsetX));
+          const rx = Math.max(9.5, Math.min(11.2, 10.5 + eyeOffsetX));
+          const ey = Math.max(4.5, Math.min(6.2, 5.2 + eyeOffsetY));
+          eyesSvg = `
+            <rect x="${lx.toFixed(1)}" y="${ey.toFixed(1)}" width="1.3" height="2.6" fill="#18171A" />
+            <rect x="${rx.toFixed(1)}" y="${ey.toFixed(1)}" width="1.3" height="2.6" fill="#18171A" />
+          `;
+        }
+
+        const blushSvg =
+          pet.mood === 'blush'
+            ? `<rect x="2.5" y="7.5" width="2" height="1.2" fill="#F497A9" /><rect x="11.5" y="7.5" width="2" height="1.2" fill="#F497A9" />`
+            : '';
+
+        if (isCoral) {
+          // Coral pixel crab/block buddy (matching screenshot left mascot)
+          const l1 = dangling ? 10.2 : 11;
+          const l2 = dangling ? 11 : 10.2;
+          return `
+            <svg viewBox="0 0 16 14">
+              <!-- Main coral body -->
+              <rect x="2" y="2" width="12" height="8" fill="${body}" />
+              <rect x="2" y="9" width="12" height="1" fill="${shade}" />
+              <!-- Side pixel arms -->
+              <rect x="0" y="6" width="2" height="2" fill="${body}" />
+              <rect x="14" y="6" width="2" height="2" fill="${body}" />
+              <!-- 4 tiny pixel legs -->
+              <rect x="3" y="10" width="1.4" height="${(l1 - 8).toFixed(1)}" fill="${body}" />
+              <rect x="5.2" y="10" width="1.4" height="${(l2 - 8).toFixed(1)}" fill="${shade}" />
+              <rect x="9.4" y="10" width="1.4" height="${(l2 - 8).toFixed(1)}" fill="${shade}" />
+              <rect x="11.6" y="10" width="1.4" height="${(l1 - 8).toFixed(1)}" fill="${body}" />
+              ${eyesSvg}
+              ${blushSvg}
+            </svg>
+          `;
+        }
+
+        // Lavender pixel cat (matching screenshot right mascot with pointy ears + curled tail)
+        const tailWag = Math.sin(performance.now() * 0.008 + pet.tailPhase) > 0 ? 0 : 1;
+        const l1 = dangling ? 10.2 : 11;
+        const l2 = dangling ? 11 : 10.2;
+        return `
+          <svg viewBox="0 0 16 14">
+            <!-- Pointy cat ears -->
+            <rect x="2" y="0" width="2" height="2" fill="${body}" />
+            <rect x="11" y="0" width="2" height="2" fill="${body}" />
+            <rect x="3" y="1" width="1" height="1" fill="${shade}" />
+            <rect x="11" y="1" width="1" height="1" fill="${shade}" />
+            <!-- Body -->
+            <rect x="2" y="2" width="11" height="8" fill="${body}" />
+            <rect x="2" y="9" width="11" height="1" fill="${shade}" />
+            <!-- Curled pixel tail on right -->
+            <rect x="13" y="7" width="1.5" height="2" fill="${body}" />
+            <rect x="14" y="${4 + tailWag}" width="1.5" height="3.5" fill="${body}" />
+            <!-- 4 tiny pixel legs -->
+            <rect x="3" y="10" width="1.4" height="${(l1 - 8).toFixed(1)}" fill="${body}" />
+            <rect x="5" y="10" width="1.4" height="${(l2 - 8).toFixed(1)}" fill="${shade}" />
+            <rect x="8.8" y="10" width="1.4" height="${(l2 - 8).toFixed(1)}" fill="${shade}" />
+            <rect x="10.8" y="10" width="1.4" height="${(l1 - 8).toFixed(1)}" fill="${body}" />
+            ${eyesSvg}
+            ${blushSvg}
+          </svg>
+        `;
+      }
+
+      class PixelMascot {
+        constructor({ id, name, species, startOffsetFromRight }) {
+          this.id = id;
+          this.name = name;
+          this.species = species;
+          this.startOffsetFromRight = startOffsetFromRight;
+
+          this.x = 400;
+          this.y = 0; // 0 = sitting on top edge of prompt card; negative = airborne
+          this.vx = 0;
+          this.vy = 0;
+          this.facing = 1;
+          this.rot = 0;
+          this.scaleX = 1;
+          this.scaleY = 1;
+
+          this.mood = 'idle'; // idle | happy | blush | sleep | surprised
+          this.actionIdx = 0;
+          this.actionTimer = 0;
+          this.activeAction = null;
+          this.flipProgress = 0;
+          this.dancePhase = 0;
+          this.legPhase = 0;
+          this.tailPhase = Math.random() * 10;
+          this.blinking = false;
+          this.nextBlinkAt = performance.now() + 2000 + Math.random() * 3000;
+          this.nextWanderAt = performance.now() + 2500 + Math.random() * 3500;
+          this.wanderTargetX = null;
+          this.lastInteractAt = performance.now();
+
+          this.eyeDx = 0;
+          this.eyeDy = 0;
+
+          this.dragging = false;
+          this.dragMoved = false;
+          this.dragOffsetX = 0;
+          this.dragOffsetY = 0;
+          this.lastDragX = 0;
+          this.lastDragY = 0;
+          this.dragVelX = 0;
+          this.dragVelY = 0;
+
+          this.stackedOn = null; // reference to bottom pet if piggybacking
+          this.carrierOf = null; // reference to top pet
+
+          this.el = document.createElement('div');
+          this.el.className = 'pet-actor';
+          this.spriteHost = document.createElement('div');
+          this.spriteHost.style.width = '100%';
+          this.spriteHost.style.height = '100%';
+          this.bubbleEl = document.createElement('div');
+          this.bubbleEl.className = 'pet-bubble';
+          this.el.appendChild(this.spriteHost);
+          this.el.appendChild(this.bubbleEl);
+          petLayerEl.appendChild(this.el);
+
+          this.bubbleTimer = 0;
+          this.bindPointer();
+        }
+
+        say(text, ms = 1800) {
+          this.bubbleEl.textContent = text;
+          this.bubbleEl.classList.add('show');
+          window.clearTimeout(this.bubbleTimer);
+          this.bubbleTimer = window.setTimeout(() => {
+            this.bubbleEl.classList.remove('show');
+          }, ms);
+        }
+
+        resetPosition() {
+          const w = stageEl.clientWidth || 720;
+          this.unstack();
+          this.x = Math.max(40, w - this.startOffsetFromRight);
+          this.y = 0;
+          this.vx = 0;
+          this.vy = 0;
+          this.rot = 0;
+          this.scaleX = 1;
+          this.scaleY = 1;
+          this.mood = 'idle';
+          this.activeAction = null;
+          this.wanderTargetX = null;
+        }
+
+        unstack() {
+          if (this.stackedOn) {
+            this.stackedOn.carrierOf = null;
+            this.stackedOn = null;
+          }
+          if (this.carrierOf) {
+            this.carrierOf.stackedOn = null;
+            this.carrierOf.vy = -4.5;
+            this.carrierOf = null;
+          }
+        }
+
+        bindPointer() {
+          this.el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.el.setPointerCapture(e.pointerId);
+            this.unstack();
+            this.dragging = true;
+            this.dragMoved = false;
+            this.activeAction = null;
+            this.wanderTargetX = null;
+            this.mood = 'surprised';
+            this.lastInteractAt = performance.now();
+            this.el.classList.add('dragging');
+
+            const stageRect = stageEl.getBoundingClientRect();
+            const px = e.clientX - stageRect.left;
+            const py = e.clientY - stageRect.top;
+            this.dragOffsetX = this.x - px;
+            this.dragOffsetY = this.y - py;
+            this.lastDragX = px;
+            this.lastDragY = py;
+            this.dragVelX = 0;
+            this.dragVelY = 0;
+            this.say('拎起来了!');
+          });
+
+          this.el.addEventListener('pointermove', (e) => {
+            if (!this.dragging) return;
+            const stageRect = stageEl.getBoundingClientRect();
+            const px = e.clientX - stageRect.left;
+            const py = e.clientY - stageRect.top;
+            const dx = px - this.lastDragX;
+            const dy = py - this.lastDragY;
+            if (Math.hypot(dx, dy) > 3) this.dragMoved = true;
+
+            this.dragVelX = this.dragVelX * 0.55 + dx * 0.45;
+            this.dragVelY = this.dragVelY * 0.55 + dy * 0.45;
+            this.x = px + this.dragOffsetX;
+            this.y = py + this.dragOffsetY;
+            this.rot = Math.max(-28, Math.min(28, this.dragVelX * 1.9));
+            this.lastDragX = px;
+            this.lastDragY = py;
+          });
+
+          const finishDrag = (e) => {
+            if (!this.dragging) return;
+            try {
+              this.el.releasePointerCapture(e.pointerId);
+            } catch {
+              /* ignore */
+            }
+            this.dragging = false;
+            this.el.classList.remove('dragging');
+
+            if (!this.dragMoved) {
+              this.mood = 'idle';
+              this.rot = 0;
+              this.triggerNextClickAction();
+              return;
+            }
+
+            // Check if dropped directly onto the other mascot -> Piggyback Stack!
+            const other = mascots.find((m) => m !== this);
+            if (other && !other.stackedOn && Math.abs(this.x - other.x) < 38 && Math.abs(this.y - (other.y - 30)) < 44) {
+              this.stackedOn = other;
+              other.carrierOf = this;
+              this.vx = 0;
+              this.vy = 0;
+              this.rot = 0;
+              this.mood = 'happy';
+              other.mood = 'happy';
+              spawnPixelFx(other.x, other.y - 45, 'star', 8);
+              this.say('叠罗汉成功!');
+              other.say('好重呀~');
+              setStatus(`${this.name} 稳稳跳到了 ${other.name} 头顶叠罗汉！`);
+              return;
+            }
+
+            // Release with throw physics
+            this.vx = Math.max(-14, Math.min(14, this.dragVelX * 0.9));
+            this.vy = Math.max(-15, Math.min(10, this.dragVelY * 0.9));
+            this.mood = 'surprised';
+            setStatus(`把 ${this.name} 抛出去啦！松手后会按重力弹跳落回边缘。`);
+          };
+
+          this.el.addEventListener('pointerup', finishDrag);
+          this.el.addEventListener('pointercancel', finishDrag);
+        }
+
+        triggerNextClickAction() {
+          totalClicks++;
+          counterEl.textContent = `CLICKS: ${totalClicks}`;
+          this.lastInteractAt = performance.now();
+
+          // Wake up immediately if napping
+          if (this.mood === 'sleep') {
+            this.mood = 'surprised';
+            this.vy = -7.5;
+            this.scaleX = 0.85;
+            this.scaleY = 1.2;
+            spawnPixelFx(this.x, this.y - 26, 'bang', 2);
+            this.say('醒了醒了!');
+            setStatus(`${this.name} 被你点醒，吓得跳了起来！`);
+            return;
+          }
+
+          const act = ACTIONS[this.actionIdx % ACTIONS.length];
+          this.actionIdx++;
+          this.runAction(act.id);
+          setStatus(`${this.name} 触发动作 [${this.actionIdx}/${ACTIONS.length}]：${act.label}`);
+        }
+
+        runAction(id) {
+          this.activeAction = id;
+          this.wanderTargetX = null;
+
+          if (id === 'jump') {
+            this.mood = 'happy';
+            this.vy = -9.6;
+            this.scaleX = 0.82;
+            this.scaleY = 1.24;
+            spawnPixelFx(this.x, this.y - 28, 'star', 7);
+            this.say('耶!');
+          } else if (id === 'flip') {
+            this.mood = 'happy';
+            this.vy = -10.4;
+            this.flipProgress = 0.001;
+            spawnPixelFx(this.x, this.y - 12, 'dust', 5);
+            this.say('后空翻!');
+          } else if (id === 'dance') {
+            this.mood = 'happy';
+            this.actionTimer = 95;
+            this.dancePhase = 0;
+            spawnPixelFx(this.x, this.y - 34, 'note', 4);
+            this.say('蹦迪中~');
+          } else if (id === 'blush') {
+            this.mood = 'blush';
+            this.actionTimer = 110;
+            this.vy = -4.2;
+            spawnPixelFx(this.x, this.y - 34, 'heart', 5);
+            this.say('嘿嘿///');
+          } else if (id === 'nap') {
+            this.mood = 'sleep';
+            this.actionTimer = 360;
+            this.scaleX = 1.16;
+            this.scaleY = 0.82;
+            spawnPixelFx(this.x + 10, this.y - 26, 'zzz', 2);
+            this.say('Zzz...');
+          } else if (id === 'dash') {
+            this.mood = 'happy';
+            const w = stageEl.clientWidth || 720;
+            const dir = this.x > w * 0.5 ? -1 : 1;
+            this.facing = dir;
+            this.vx = dir * 9.5;
+            this.vy = -2.2;
+            this.scaleX = 1.22;
+            this.scaleY = 0.84;
+            spawnPixelFx(this.x - dir * 12, this.y - 8, 'dust', 6);
+            this.say('冲鸭!');
+          } else if (id === 'highfive') {
+            const other = mascots.find((m) => m !== this);
+            if (other) {
+              other.unstack();
+              other.mood = 'happy';
+              const mid = Math.max(60, Math.min((stageEl.clientWidth || 720) - 90, (this.x + other.x) * 0.5));
+              this.wanderTargetX = mid - 22;
+              other.wanderTargetX = mid + 22;
+              this.activeAction = 'highfive_seek';
+              this.say('来击掌!');
+              other.say('来啦!');
+            }
+          }
+        }
+
+        typingBob() {
+          if (this.dragging || this.mood === 'sleep') return;
+          if (this.y >= -1 && !this.stackedOn) {
+            this.vy = -3.4;
+            this.scaleX = 0.92;
+            this.scaleY = 1.1;
+          }
+          this.mood = 'happy';
+          this.lastInteractAt = performance.now();
+        }
+
+        update(now) {
+          const stageW = stageEl.clientWidth || 720;
+          const minX = 32;
+          const maxX = Math.max(100, stageW - 64);
+
+          // Blink timer
+          if (now >= this.nextBlinkAt) {
+            this.blinking = !this.blinking;
+            this.nextBlinkAt = now + (this.blinking ? 120 : 2400 + Math.random() * 3400);
+          }
+
+          // Eye tracking toward mouse
+          if (mouse.active) {
+            const rect = stageEl.getBoundingClientRect();
+            const mx = mouse.x - rect.left;
+            const my = mouse.y - rect.top;
+            const angle = Math.atan2(my - (this.y - 20), mx - this.x);
+            this.eyeDx = Math.cos(angle) * 0.85;
+            this.eyeDy = Math.sin(angle) * 0.65;
+          } else {
+            this.eyeDx *= 0.9;
+            this.eyeDy *= 0.9;
+          }
+
+          // Smooth squash/stretch recovery
+          const targetSX = this.mood === 'sleep' ? 1.14 : 1;
+          const targetSY = this.mood === 'sleep' ? 0.84 : 1;
+          this.scaleX += (targetSX - this.scaleX) * 0.16;
+          this.scaleY += (targetSY - this.scaleY) * 0.16;
+
+          if (this.dragging) {
+            this.renderDom();
+            return;
+          }
+
+          // Piggyback riding state
+          if (this.stackedOn) {
+            this.x = this.stackedOn.x;
+            this.y = this.stackedOn.y - 31;
+            this.rot = Math.sin(now * 0.008) * 3;
+            this.renderDom();
+            return;
+          }
+
+          // Treat chasing overrides idle wandering
+          if (activeTreat && this.mood !== 'sleep') {
+            this.wanderTargetX = activeTreat.x;
+          }
+
+          // Active timed actions
+          if (this.activeAction === 'dance') {
+            this.actionTimer--;
+            this.dancePhase += 0.28;
+            this.rot = Math.sin(this.dancePhase) * 14;
+            if (this.y >= 0 && Math.sin(this.dancePhase) > 0.92) {
+              this.vy = -3.8;
+              spawnPixelFx(this.x, this.y - 34, 'note', 1);
+            }
+            if (this.actionTimer <= 0) {
+              this.activeAction = null;
+              this.mood = 'idle';
+              this.rot = 0;
+            }
+          } else if (this.activeAction === 'blush') {
+            this.actionTimer--;
+            if (this.actionTimer % 28 === 0) spawnPixelFx(this.x, this.y - 34, 'heart', 1);
+            if (this.actionTimer <= 0) {
+              this.activeAction = null;
+              this.mood = 'idle';
+            }
+          } else if (this.mood === 'sleep') {
+            this.actionTimer--;
+            if (this.actionTimer % 55 === 0) spawnPixelFx(this.x + 10, this.y - 24, 'zzz', 1);
+            if (this.actionTimer <= 0) {
+              this.mood = 'idle';
+              this.activeAction = null;
+            }
+          } else if (this.activeAction === 'highfive_seek') {
+            const other = mascots.find((m) => m !== this);
+            if (other && Math.abs(this.x - other.x) < 48) {
+              this.activeAction = null;
+              this.wanderTargetX = null;
+              other.wanderTargetX = null;
+              this.vy = -7.5;
+              other.vy = -7.5;
+              spawnPixelFx((this.x + other.x) * 0.5, -34, 'star', 10);
+              spawnPixelFx((this.x + other.x) * 0.5, -38, 'heart', 3);
+              this.say('Nice!');
+              other.say('Nice!');
+            }
+          }
+
+          // Autonomous wandering along the top rail
+          if (this.wanderTargetX !== null && this.y >= -1 && this.mood !== 'sleep') {
+            const diff = this.wanderTargetX - this.x;
+            const speed = activeTreat ? 2.4 : 1.2;
+            if (Math.abs(diff) <= speed + 2) {
+              this.wanderTargetX = null;
+              // Eat treat if reached!
+              if (activeTreat && Math.abs(this.x - activeTreat.x) < 26) {
+                spawnPixelFx(activeTreat.x, -12, 'crumb', 8);
+                spawnPixelFx(this.x, -36, 'heart', 4);
+                activeTreat.el.remove();
+                activeTreat = null;
+                this.vy = -6.5;
+                this.mood = 'happy';
+                this.say('真香!');
+                setStatus(`${this.name} 抢先吃掉了像素零食！`);
+              }
+            } else {
+              this.facing = Math.sign(diff);
+              this.x += this.facing * speed;
+              this.legPhase = (this.legPhase + (activeTreat ? 0.16 : 0.08)) % 1;
+            }
+          } else if (this.y >= 0 && !this.activeAction && now >= this.nextWanderAt && this.mood !== 'sleep') {
+            this.nextWanderAt = now + 3800 + Math.random() * 4800;
+            if (Math.random() < 0.72) {
+              this.wanderTargetX = minX + Math.random() * (maxX - minX);
+            }
+          }
+
+          // Backflip rotation
+          if (this.flipProgress > 0) {
+            this.flipProgress += 0.042;
+            this.rot = this.flipProgress * 360 * this.facing;
+            if (this.flipProgress >= 1) {
+              this.flipProgress = 0;
+              this.rot = 0;
+            }
+          } else if (this.activeAction !== 'dance') {
+            this.rot *= 0.82;
+          }
+
+          // Physics integration
+          if (this.y < 0 || this.vy !== 0 || Math.abs(this.vx) > 0.05) {
+            this.vy += GRAVITY;
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vx *= this.y >= 0 ? 0.82 : 0.985;
+
+            if (this.y >= 0) {
+              this.y = 0;
+              if (Math.abs(this.vy) > 2.8) {
+                this.vy = -this.vy * BOUNCE;
+                this.scaleX = 1.22;
+                this.scaleY = 0.78;
+                spawnPixelFx(this.x, -4, 'dust', 4);
+              } else {
+                this.vy = 0;
+                if (this.mood === 'surprised') this.mood = 'idle';
+              }
+            }
+          }
+
+          // Keep gently returning onto the top rail if thrown past edges
+          if (this.x < minX) {
+            this.x = minX;
+            this.vx = Math.abs(this.vx) * 0.5;
+          } else if (this.x > stageW - 24) {
+            this.x = stageW - 24;
+            this.vx = -Math.abs(this.vx) * 0.5;
+          }
+
+          // Cactus bump easter egg! (cactus sits near right: 18px => x ~= stageW - 30)
+          const cactusX = stageW - 30;
+          if (Math.abs(this.x - cactusX) < 22 && this.y > -20) {
+            this.vx = -5.2;
+            this.vy = -6.8;
+            this.mood = 'surprised';
+            this.wanderTargetX = null;
+            spawnPixelFx(cactusX, -22, 'bang', 3);
+            this.say('哎哟好扎!');
+            setStatus(`${this.name} 撞到了角落的小仙人掌，吓得弹开了！`);
+          }
+
+          this.renderDom();
+        }
+
+        renderDom() {
+          this.spriteHost.innerHTML = renderSpriteSvg(this);
+          this.el.style.transform = `translate3d(${this.x.toFixed(1)}px, ${this.y.toFixed(1)}px, 0) rotate(${this.rot.toFixed(1)}deg) scale(${this.scaleX.toFixed(3)}, ${this.scaleY.toFixed(3)})`;
+        }
+      }
+
+      const coral = new PixelMascot({
+        id: 'coral',
+        name: '珊瑚小蟹',
+        species: 'coral',
+        startOffsetFromRight: 146,
+      });
+
+      const lavender = new PixelMascot({
+        id: 'lavender',
+        name: '薰衣草小猫',
+        species: 'lavender',
+        startOffsetFromRight: 76,
+      });
+
+      const mascots = [coral, lavender];
+      mascots.forEach((m) => m.resetPosition());
+
+      // Mouse tracking
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          mouse.x = e.clientX;
+          mouse.y = e.clientY;
+          mouse.active = true;
+        },
+        { passive: true },
+      );
+
+      // Cactus click interaction
+      cactusEl.addEventListener('click', () => {
+        cactusEl.classList.add('bloom');
+        const cactusX = (stageEl.clientWidth || 720) - 30;
+        spawnPixelFx(cactusX, -28, 'star', 5);
+        setStatus('迷你仙人掌开出一朵小花！');
+        window.setTimeout(() => cactusEl.classList.remove('bloom'), 240);
+      });
+
+      // Typing rhythm reaction
+      demoInputEl.addEventListener('input', () => {
+        mascots.forEach((m) => m.typingBob());
+      });
+
+      document.getElementById('btn-send').addEventListener('click', () => {
+        mascots.forEach((m) => {
+          m.unstack();
+          m.runAction('jump');
+        });
+        setStatus('发送成功！两只小吉祥物同步起跳欢呼！');
+      });
+
+      // Toolbar creative interactions
+      document.getElementById('btn-treat').addEventListener('click', () => {
+        if (activeTreat) activeTreat.el.remove();
+        const w = stageEl.clientWidth || 720;
+        const tx = 70 + Math.random() * Math.max(120, w - 180);
+        const el = document.createElement('div');
+        el.className = 'treat-item';
+        el.style.left = `${tx}px`;
+        el.innerHTML = `<svg viewBox="0 0 8 8"><rect x="1" y="1" width="6" height="6" fill="#FBBF24"/><rect x="2" y="2" width="1" height="1" fill="#92400E"/><rect x="5" y="3" width="1" height="1" fill="#92400E"/><rect x="3" y="5" width="1" height="1" fill="#92400E"/></svg>`;
+        petLayerEl.appendChild(el);
+        activeTreat = { x: tx, el };
+        mascots.forEach((m) => {
+          m.unstack();
+          if (m.mood === 'sleep') m.mood = 'idle';
+          m.say('零食!');
+        });
+        setStatus('边框上掉落了一块像素小饼干，两只宠物开始竞速抢食！');
+      });
+
+      document.getElementById('btn-stack').addEventListener('click', () => {
+        coral.unstack();
+        lavender.unstack();
+        lavender.stackedOn = coral;
+        coral.carrierOf = lavender;
+        lavender.mood = 'happy';
+        coral.mood = 'happy';
+        spawnPixelFx(coral.x, coral.y - 48, 'star', 8);
+        lavender.say('站高高!');
+        coral.say('稳住稳住~');
+        setStatus('薰衣草小猫跳上了珊瑚小蟹的头顶，开启双层叠罗汉模式！');
+      });
+
+      document.getElementById('btn-party').addEventListener('click', () => {
+        mascots.forEach((m) => {
+          m.unstack();
+          m.runAction('dance');
+        });
+        setStatus('双宠同步进入像素摇摆舞模式！');
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        if (activeTreat) {
+          activeTreat.el.remove();
+          activeTreat = null;
+        }
+        mascots.forEach((m) => m.resetPosition());
+        setStatus('两只小吉祥物已归位到右上角边框！');
+      });
+
+      // Main 60fps loop
+      function loop(now) {
+        for (const m of mascots) m.update(now);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.vy += p.grav;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= p.decay;
+          if (p.life <= 0) {
+            p.el.remove();
+            particles.splice(i, 1);
+          } else {
+            p.el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
+            p.el.style.opacity = p.life.toFixed(2);
+          }
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>

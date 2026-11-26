@@ -1,0 +1,22 @@
+{
+  "id": "2026-11-pixel-edge-mascots",
+  "title": "输入框边缘双像素吉祥物（可点击多动作 / 物理拖拽 / 叠罗汉 / 喂食互动）",
+  "kind": "motion",
+  "theme": "dark",
+  "summary": "栖息在暗黑输入框/卡片右上边缘的珊瑚像素小蟹与薰衣草像素小猫（配迷你盆栽仙人掌），支持每次点击切换 7 种像素动作、拎起惯性拖拽抛掷、拖到一起叠罗汉、仙人掌扎脚弹跳、眼神跟随、打字节拍响应与撒零食竞速。",
+  "tags": [
+    "mascot",
+    "pixel-art",
+    "interactive",
+    "draggable",
+    "physics",
+    "micro-interaction",
+    "dark",
+    "prompt-box",
+    "pet",
+    "motion"
+  ],
+  "source": "Obsidian Prism 双像素吉祥物截图 + 扩展多动作拖拽互动创意",
+  "stack": ["html-css", "react-tailwind"],
+  "createdAt": "2026-11-26"
+}

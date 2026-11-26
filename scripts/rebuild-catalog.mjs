@@ -39,6 +39,7 @@ for (const dir of entries) {
         tokens: hasFile('tokens.json') ? `items/${dir.name}/tokens.json` : null,
         preview: hasFile('preview.html') ? `items/${dir.name}/preview.html` : null,
         snippet: hasFile('snippet.tsx') ? `items/${dir.name}/snippet.tsx` : null,
+        sourceDir: hasFile('source') ? `items/${dir.name}/source` : null,
         previewImage: hasFile('assets/preview.png')
           ? `items/${dir.name}/assets/preview.png`
           : hasFile('assets/preview.jpg')

@@ -1,21 +1,22 @@
 {
   "id": "2026-11-rgb-prism-rim-hover",
-  "title": "鼠标靠近/悬浮 RGB 棱镜灯带边框（Proximity RGB Rim）",
+  "title": "Obsidian Prism 原版 300Hz GPU Canvas RGB 棱镜灯带（Prism Rim Canvas）",
   "kind": "motion",
-  "theme": "dark",
-  "summary": "暗黑磨砂容器在鼠标靠近周围（Proximity）或悬浮上方时，沿边缘实时点亮跟随指针的流动 RGB 棱镜灯带与柔和环境光晕。",
+  "theme": "both",
+  "summary": "收录 Obsidian Prism 原版 prism-rim-canvas.js（GPL-3.0）：零 StyleRecalc 2D Canvas 径向棱镜灯带、6 套主题色板、镜面玻璃光标倒影模式与底部反射模式，鼠标靠近周围与悬浮上方时实时点亮。",
   "tags": [
+    "obsidian-prism",
     "rgb",
     "prism",
     "rim-light",
+    "canvas",
     "proximity-hover",
-    "border-glow",
+    "mirror-reflection",
     "dark",
-    "prompt-box",
-    "card",
+    "light",
     "motion"
   ],
-  "source": "Obsidian Prism 风格参考截图 + 鼠标靠近/悬浮 RGB 灯带需求",
-  "stack": ["html-css", "react-tailwind"],
+  "source": "Obsidian Prism (RMvdesi, https://github.com/RMvdesi/obsidian-prism, GPL-3.0-only) — prism-rim-canvas.js",
+  "stack": ["html-css", "canvas-2d", "react-tailwind"],
   "createdAt": "2026-11-26"
 }

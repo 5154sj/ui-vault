@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Edge Mascots · Q弹微像素互动预览</title>
+    <style>
+      :root {
+        --bg-canvas: #111112;
+        --bg-surface: #1b1b1d;
+        --border-subtle: rgba(255, 255, 255, 0.11);
+        --text-primary: #f4f4f6;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(60% 45% at 65% 25%, rgba(155, 134, 242, 0.06), transparent 65%),
+          radial-gradient(55% 45% at 35% 85%, rgba(220, 122, 88, 0.07), transparent 65%),
+          var(--bg-canvas);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        user-select: none;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 36px 24px 72px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .header h1 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        font-size: 12.5px;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .pill-btn:hover {
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.24);
+        background: #232327;
+        transform: translateY(-1px);
+      }
+
+      .pill-btn:active {
+        transform: scale(0.93, 1.05);
+      }
+
+      /* =====================================================================
+         STAGE + PROMPT BOX
+         ===================================================================== */
+      .prompt-stage {
+        position: relative;
+        margin-top: 108px;
+      }
+
+      .pet-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 0;
+        pointer-events: none;
+        z-index: 20;
+      }
+
+      /* Crisp 28x24 pixel grid rendered at 56x48px => 2px micro-pixels */
+      .pet-actor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 56px;
+        height: 48px;
+        margin-left: -28px;
+        margin-top: -45px;
+        pointer-events: auto;
+        cursor: grab;
+        touch-action: none;
+        transform-origin: 50% 95%;
+        will-change: transform;
+      }
+
+      .pet-actor.dragging {
+        cursor: grabbing;
+        z-index: 45;
+      }
+
+      .pet-actor svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+        filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.42));
+      }
+
+      /* Subtle pixel chevron shown above target pet when dragging close enough to stack! */
+      .stack-hint {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 14px;
+        height: 10px;
+        margin-left: -7px;
+        margin-top: -58px;
+        pointer-events: none;
+        z-index: 35;
+        opacity: 0;
+        transition: opacity 0.14s ease;
+      }
+
+      .stack-hint.show {
+        opacity: 1;
+      }
+
+      .stack-hint svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+      }
+
+      /* Fine 20x24 pixel cactus with real spring squash! */
+      .cactus-prop {
+        position: absolute;
+        top: -33px;
+        right: 16px;
+        width: 30px;
+        height: 36px;
+        pointer-events: auto;
+        cursor: pointer;
+        transform-origin: 50% 100%;
+        will-change: transform;
+        z-index: 15;
+      }
+
+      .cactus-prop svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+      }
+
+      .treat-item {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        margin-left: -8px;
+        margin-top: -15px;
+        pointer-events: none;
+        transform-origin: 50% 95%;
+        z-index: 18;
+      }
+
+      .treat-item svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        shape-rendering: crispEdges;
+      }
+
+      .fx-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 0;
+        pointer-events: none;
+        z-index: 55;
+      }
+
+      .fx-particle {
+        position: absolute;
+        pointer-events: none;
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+
+      .fx-particle svg {
+        display: block;
+        shape-rendering: crispEdges;
+      }
+
+      /* Prompt Box Surface */
+      .prompt-card {
+        position: relative;
+        border-radius: 16px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        box-shadow:
+          0 14px 36px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        padding: 18px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .prompt-textarea {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 14.5px;
+        line-height: 1.55;
+        font-family: inherit;
+        resize: none;
+        user-select: text;
+      }
+
+      .prompt-textarea::placeholder {
+        color: var(--text-muted);
+      }
+
+      .prompt-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .footer-left,
+      .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .send-circle {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: none;
+        background: #f4f4f6;
+        color: #111112;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .send-circle:hover {
+        transform: scale(1.1);
+      }
+
+      .send-circle:active {
+        transform: scale(0.9);
+      }
+
+      .guide-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+        gap: 10px;
+      }
+
+      .guide-card {
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.55;
+      }
+
+      .guide-card strong {
+        display: block;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div>
+          <h1>Pixel Edge Mascots · Q弹微像素双吉祥物</h1>
+          <p>二阶弹簧麻薯物理引擎 · 纯像素风 Q弹粒子 · 极少乱跑 · 久待机触发持续动作 · 轻松拎起叠罗汉。</p>
+        </div>
+        <div class="toolbar">
+          <button class="pill-btn" id="btn-treat">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="4" y="4" width="8" height="8" fill="#FBBF24" />
+              <rect x="6" y="6" width="2" height="2" fill="#92400E" />
+              <rect x="9" y="8" width="2" height="2" fill="#92400E" />
+            </svg>
+            撒零食竞速
+          </button>
+          <button class="pill-btn" id="btn-stack">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="4" y="2" width="8" height="5" fill="#9B86F2" />
+              <rect x="3" y="8" width="10" height="6" fill="#DC7A58" />
+            </svg>
+            叠罗汉
+          </button>
+          <button class="pill-btn" id="btn-party">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+              <rect x="7" y="1" width="2" height="14" fill="#38BDF8" />
+              <rect x="1" y="7" width="14" height="2" fill="#38BDF8" />
+            </svg>
+            一起 Q弹蹦迪
+          </button>
+          <button class="pill-btn" id="btn-reset">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <polyline points="20 4 20 9 15 9" />
+            </svg>
+            归位
+          </button>
+        </div>
+      </header>
+
+      <section class="prompt-stage" id="prompt-stage">
+        <div class="pet-layer" id="pet-layer">
+          <!-- Pixel Snap Hint Chevron for Drag-to-Stack -->
+          <div class="stack-hint" id="stack-hint">
+            <svg viewBox="0 0 7 5">
+              <rect x="0" y="0" width="1" height="2" fill="#FBBF24" />
+              <rect x="6" y="0" width="1" height="2" fill="#FBBF24" />
+              <rect x="1" y="1" width="1" height="2" fill="#FBBF24" />
+              <rect x="5" y="1" width="1" height="2" fill="#FBBF24" />
+              <rect x="2" y="2" width="3" height="2" fill="#FDE68A" />
+              <rect x="3" y="4" width="1" height="1" fill="#FBBF24" />
+            </svg>
+          </div>
+
+          <!-- High-detail 20x24 Pixel Potted Cactus (spring-driven Q弹 wobble!) -->
+          <div class="cactus-prop" id="cactus" title="点一下让仙人掌 Q弹开花">
+            <svg viewBox="0 0 20 24">
+              <rect x="9" y="1" width="2" height="1" fill="#F08A64" />
+              <rect x="8" y="2" width="4" height="2" fill="#E87D55" />
+              <rect x="9" y="2" width="2" height="1" fill="#FCD34D" />
+              <rect x="8" y="4" width="4" height="13" fill="#73A98E" />
+              <rect x="8" y="5" width="1" height="11" fill="#8EC4A9" />
+              <rect x="11" y="5" width="1" height="12" fill="#53846C" />
+              <rect x="7" y="6" width="1" height="1" fill="#A9D6C0" />
+              <rect x="12" y="8" width="1" height="1" fill="#A9D6C0" />
+              <rect x="7" y="12" width="1" height="1" fill="#A9D6C0" />
+              <rect x="3" y="8" width="2" height="5" fill="#73A98E" />
+              <rect x="3" y="8" width="1" height="4" fill="#8EC4A9" />
+              <rect x="5" y="11" width="3" height="2" fill="#73A98E" />
+              <rect x="5" y="12" width="3" height="1" fill="#53846C" />
+              <rect x="15" y="6" width="2" height="5" fill="#53846C" />
+              <rect x="15" y="6" width="1" height="4" fill="#73A98E" />
+              <rect x="12" y="9" width="3" height="2" fill="#53846C" />
+              <rect x="5" y="17" width="10" height="2" fill="#9D7B68" />
+              <rect x="5" y="17" width="10" height="1" fill="#B28E7A" />
+              <rect x="6" y="19" width="8" height="4" fill="#7C5E4D" />
+              <rect x="12" y="19" width="2" height="4" fill="#63493B" />
+              <rect x="7" y="23" width="6" height="1" fill="#63493B" />
+            </svg>
+          </div>
+        </div>
+        <div class="fx-layer" id="fx-layer"></div>
+
+        <div class="prompt-card" id="prompt-card">
+          <textarea
+            class="prompt-textarea"
+            id="demo-input"
+            rows="2"
+            placeholder="点两只小家伙看 Q弹像素爆点；把一只拎起来移到另一只头顶（看到小箭头）松手叠罗汉；静置 8 秒看它们的持续待机动作..."
+          ></textarea>
+          <div class="prompt-footer">
+            <div class="footer-left">
+              <span class="pill-btn" style="cursor: default">二阶弹簧麻薯形变</span>
+              <span class="pill-btn" style="cursor: default">纯像素风粒子 · 几乎不乱跑 · 久待机卖萌</span>
+            </div>
+            <div class="footer-right">
+              <button class="send-circle" id="btn-send" title="发送（双宠 Q弹欢呼）">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="6 11 12 5 18 11" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="guide-grid">
+        <div class="guide-card">
+          <strong>Q弹果冻弹簧引擎</strong>
+          体积守恒二阶弹簧（宽扁 ↔ 细高回弹），点击、拎起、落地、仙人掌和粒子全部软弹有生命力，落地一触即稳不乱抖。
+        </div>
+        <div class="guide-card">
+          <strong>全像素风点击与互动粒子</strong>
+          像素冲击环、像素星爆、像素爱心、音符、Zzz 和饼干碎屑全部以锐利像素块绘制并带 Q弹弹出缩放。
+        </div>
+        <div class="guide-card">
+          <strong>轻松拖拽叠罗汉</strong>
+          拎起一只靠近另一只头顶会出现像素落点箭头，松手即稳稳叠罗汉，触发双层麻薯共振回弹；点底部两只一起波浪弹跳。
+        </div>
+        <div class="guide-card">
+          <strong>乖乖待在原位 + 久待机动作</strong>
+          平时几乎不会自己乱走；静置 ~8 秒后会持续进入软糯打盹、原地 Q弹踩奶、好奇歪头张望或双宠贴贴冒爱心。
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const stageEl = document.getElementById('prompt-stage');
+      const petLayerEl = document.getElementById('pet-layer');
+      const fxLayerEl = document.getElementById('fx-layer');
+      const cactusEl = document.getElementById('cactus');
+      const stackHintEl = document.getElementById('stack-hint');
+      const demoInputEl = document.getElementById('demo-input');
+
+      const GRAVITY = 0.62;
+      const ACTIONS = ['jump', 'flip', 'dance', 'blush', 'nap', 'dash', 'highfive'];
+      const IDLE_ROUTINES = ['cozy_nap', 'mochi_bounce', 'curious_look', 'buddy_gaze'];
+
+      const mouse = { x: -9999, y: -9999, active: false };
+      const particles = [];
+      let activeTreat = null;
+
+      // Spring state for the potted cactus so it also wobbles Q弹 when clicked or bumped!
+      const cactusSpring = { squash: 0, squashVel: 0, rot: 0, rotVel: 0 };
+
+      // 100% Pixel-Art Particle Spawner with Q弹 pop-in/out spring scaling!
+      function spawnPixelFx(x, y, kind, count = 5) {
+        const templates = {
+          star: `<svg width="12" height="12" viewBox="0 0 7 7"><rect x="3" y="0" width="1" height="7" fill="#FBBF24"/><rect x="0" y="3" width="7" height="1" fill="#FBBF24"/><rect x="2" y="2" width="3" height="3" fill="#FDE68A"/><rect x="3" y="3" width="1" height="1" fill="#FFFFFF"/></svg>`,
+          spark: `<svg width="8" height="8" viewBox="0 0 4 4"><rect x="1" y="0" width="2" height="4" fill="#A5F3FC"/><rect x="0" y="1" width="4" height="2" fill="#38BDF8"/><rect x="1" y="1" width="2" height="2" fill="#FFFFFF"/></svg>`,
+          ring: `<svg width="26" height="26" viewBox="0 0 13 13"><rect x="4" y="0" width="5" height="1" fill="#FDE68A"/><rect x="4" y="12" width="5" height="1" fill="#FDE68A"/><rect x="0" y="4" width="1" height="5" fill="#FDE68A"/><rect x="12" y="4" width="1" height="5" fill="#FDE68A"/><rect x="2" y="1" width="2" height="1" fill="#FBBF24"/><rect x="9" y="1" width="2" height="1" fill="#FBBF24"/><rect x="1" y="2" width="1" height="2" fill="#FBBF24"/><rect x="11" y="2" width="1" height="2" fill="#FBBF24"/><rect x="1" y="9" width="1" height="2" fill="#FBBF24"/><rect x="11" y="9" width="1" height="2" fill="#FBBF24"/><rect x="2" y="11" width="2" height="1" fill="#FBBF24"/><rect x="9" y="11" width="2" height="1" fill="#FBBF24"/></svg>`,
+          heart: `<svg width="14" height="12" viewBox="0 0 9 8"><rect x="1" y="0" width="2" height="1" fill="#FB7185"/><rect x="6" y="0" width="2" height="1" fill="#FB7185"/><rect x="0" y="1" width="4" height="2" fill="#FB7185"/><rect x="5" y="1" width="4" height="2" fill="#FB7185"/><rect x="4" y="2" width="1" height="1" fill="#FB7185"/><rect x="1" y="3" width="7" height="2" fill="#FB7185"/><rect x="2" y="5" width="5" height="1" fill="#F43F5E"/><rect x="3" y="6" width="3" height="1" fill="#F43F5E"/><rect x="4" y="7" width="1" height="1" fill="#F43F5E"/><rect x="1" y="1" width="1" height="1" fill="#FECDD3"/></svg>`,
+          note: `<svg width="12" height="14" viewBox="0 0 7 8"><rect x="3" y="0" width="1" height="6" fill="#38BDF8"/><rect x="4" y="0" width="3" height="1" fill="#38BDF8"/><rect x="4" y="2" width="2" height="1" fill="#7DD3FC"/><rect x="1" y="5" width="3" height="2" fill="#38BDF8"/><rect x="0" y="6" width="1" height="1" fill="#38BDF8"/></svg>`,
+          dust: `<svg width="8" height="8" viewBox="0 0 4 4"><rect x="1" y="0" width="2" height="4" fill="rgba(244,244,246,0.52)"/><rect x="0" y="1" width="4" height="2" fill="rgba(244,244,246,0.52)"/></svg>`,
+          zzz: `<svg width="12" height="12" viewBox="0 0 6 6"><rect x="0" y="0" width="6" height="1" fill="#C4B5FD"/><rect x="4" y="1" width="1" height="1" fill="#C4B5FD"/><rect x="3" y="2" width="1" height="1" fill="#C4B5FD"/><rect x="2" y="3" width="1" height="1" fill="#C4B5FD"/><rect x="1" y="4" width="1" height="1" fill="#C4B5FD"/><rect x="0" y="5" width="6" height="1" fill="#C4B5FD"/></svg>`,
+          bang: `<svg width="6" height="14" viewBox="0 0 3 7"><rect x="1" y="0" width="1" height="4" fill="#FB923C"/><rect x="1" y="5" width="1" height="2" fill="#FB923C"/></svg>`,
+          petal: `<svg width="8" height="8" viewBox="0 0 4 4"><rect x="1" y="0" width="2" height="2" fill="#F08A64"/><rect x="0" y="2" width="2" height="2" fill="#FCD34D"/></svg>`,
+          crumb: `<svg width="6" height="6" viewBox="0 0 3 3"><rect x="0" y="0" width="2" height="2" fill="#FBBF24"/><rect x="1" y="1" width="2" height="2" fill="#F59E0B"/></svg>`,
+        };
+
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement('div');
+          el.className = 'fx-particle';
+          el.innerHTML = templates[kind] || templates.star;
+          fxLayerEl.appendChild(el);
+
+          if (kind === 'ring') {
+            particles.push({
+              el,
+              kind,
+              x: x - 13,
+              y: y - 13,
+              vx: 0,
+              vy: 0,
+              grav: 0,
+              scale: 0.3,
+              scaleVel: 0.24,
+              targetScale: 1.55,
+              life: 1,
+              decay: 0.055,
+            });
+            continue;
+          }
+
+          const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.1;
+          const speed =
+            kind === 'zzz' || kind === 'heart' || kind === 'note'
+              ? 0.7 + Math.random() * 0.55
+              : 1.9 + Math.random() * 2.4;
+          particles.push({
+            el,
+            kind,
+            x: x + (Math.random() - 0.5) * 18,
+            y: y + (Math.random() - 0.5) * 8,
+            vx: kind === 'zzz' ? 0.26 : Math.cos(angle) * speed,
+            vy: kind === 'zzz' ? -0.7 : Math.sin(angle) * speed - 0.7,
+            grav: kind === 'zzz' || kind === 'heart' || kind === 'note' ? -0.006 : 0.11,
+            scale: 0.2,
+            scaleVel: 0.28, // Q弹 pop-in overshoot!
+            targetScale: 1.0,
+            life: 1,
+            decay: kind === 'zzz' ? 0.013 : 0.024 + Math.random() * 0.012,
+          });
+        }
+      }
+
+      // Fine 28x24 pixel art sprite renderer
+      function buildSpriteKey(pet, now) {
+        const legStep = pet.dragging
+          ? Math.floor(now / 85) % 2
+          : pet.isWalking
+            ? Math.floor(pet.legPhase * 2) % 2
+            : 0;
+        const tailFrame = pet.species === 'lavender' ? Math.floor(now / 230 + pet.tailPhase) % 3 : 0;
+        const ex = Math.max(-1, Math.min(1, Math.round(pet.eyeDx)));
+        const ey = Math.max(-1, Math.min(1, Math.round(pet.eyeDy)));
+        return `${pet.species}|${pet.mood}|${pet.blinking ? 1 : 0}|${pet.dragging ? 1 : 0}|${legStep}|${tailFrame}|${ex}|${ey}`;
+      }
+
+      function renderSpriteSvg(pet, now) {
+        const isCoral = pet.species === 'coral';
+        const legStep = pet.dragging
+          ? Math.floor(now / 85) % 2
+          : pet.isWalking
+            ? Math.floor(pet.legPhase * 2) % 2
+            : 0;
+        const ex = Math.max(-1, Math.min(1, Math.round(pet.eyeDx)));
+        const ey = Math.max(-1, Math.min(1, Math.round(pet.eyeDy)));
+
+        const lxBase = isCoral ? 8 : 7;
+        const rxBase = isCoral ? 18 : 16;
+        const eyeYBase = 10;
+
+        let eyesSvg = '';
+        if (pet.mood === 'sleep') {
+          eyesSvg = `
+            <rect x="${lxBase - 1}" y="${eyeYBase + 2}" width="4" height="1" fill="#161518" />
+            <rect x="${rxBase - 1}" y="${eyeYBase + 2}" width="4" height="1" fill="#161518" />
+          `;
+        } else if (pet.mood === 'happy' || pet.mood === 'blush') {
+          eyesSvg = `
+            <rect x="${lxBase}" y="${eyeYBase + 1}" width="2" height="1" fill="#161518" />
+            <rect x="${lxBase - 1}" y="${eyeYBase + 2}" width="1" height="1" fill="#161518" />
+            <rect x="${lxBase + 2}" y="${eyeYBase + 2}" width="1" height="1" fill="#161518" />
+            <rect x="${rxBase}" y="${eyeYBase + 1}" width="2" height="1" fill="#161518" />
+            <rect x="${rxBase - 1}" y="${eyeYBase + 2}" width="1" height="1" fill="#161518" />
+            <rect x="${rxBase + 2}" y="${eyeYBase + 2}" width="1" height="1" fill="#161518" />
+          `;
+        } else if (pet.mood === 'surprised' || pet.dragging) {
+          eyesSvg = `
+            <rect x="${lxBase}" y="${eyeYBase}" width="2" height="4" fill="#161518" />
+            <rect x="${rxBase}" y="${eyeYBase}" width="2" height="4" fill="#161518" />
+            <rect x="${lxBase}" y="${eyeYBase}" width="1" height="1" fill="#FFFFFF" />
+            <rect x="${rxBase}" y="${eyeYBase}" width="1" height="1" fill="#FFFFFF" />
+          `;
+        } else if (pet.blinking) {
+          eyesSvg = `
+            <rect x="${lxBase}" y="${eyeYBase + 2}" width="2" height="1" fill="#161518" />
+            <rect x="${rxBase}" y="${eyeYBase + 2}" width="2" height="1" fill="#161518" />
+          `;
+        } else {
+          const lx = lxBase + ex;
+          const rx = rxBase + ex;
+          const eyPos = eyeYBase + ey;
+          eyesSvg = `
+            <rect x="${lx}" y="${eyPos}" width="2" height="4" fill="#161518" />
+            <rect x="${rx}" y="${eyPos}" width="2" height="4" fill="#161518" />
+          `;
+        }
+
+        const blushSvg =
+          pet.mood === 'blush'
+            ? `<rect x="${lxBase - 3}" y="14" width="3" height="2" fill="#F59BAE" /><rect x="${rxBase + 2}" y="14" width="3" height="2" fill="#F59BAE" />`
+            : '';
+
+        if (isCoral) {
+          const lA = legStep ? 4 : 5;
+          const lB = legStep ? 5 : 4;
+          return `
+            <svg viewBox="0 0 28 24">
+              <rect x="4" y="5" width="20" height="1" fill="#E89070" />
+              <rect x="4" y="6" width="20" height="12" fill="#DC7A58" />
+              <rect x="4" y="17" width="20" height="1" fill="#BD5F40" />
+              <rect x="23" y="6" width="1" height="12" fill="#C96A4A" />
+              <rect x="1" y="12" width="3" height="4" fill="#DC7A58" />
+              <rect x="1" y="12" width="3" height="1" fill="#E89070" />
+              <rect x="1" y="15" width="3" height="1" fill="#BD5F40" />
+              <rect x="24" y="12" width="3" height="4" fill="#DC7A58" />
+              <rect x="24" y="12" width="3" height="1" fill="#E89070" />
+              <rect x="24" y="15" width="3" height="1" fill="#BD5F40" />
+              <rect x="6" y="18" width="2" height="${lA}" fill="#DC7A58" />
+              <rect x="10" y="18" width="2" height="${lB}" fill="#C46444" />
+              <rect x="16" y="18" width="2" height="${lB}" fill="#C46444" />
+              <rect x="20" y="18" width="2" height="${lA}" fill="#DC7A58" />
+              ${eyesSvg}
+              ${blushSvg}
+            </svg>
+          `;
+        }
+
+        const lA = legStep ? 4 : 5;
+        const lB = legStep ? 5 : 4;
+        const tailFrame = Math.floor(now / 230 + pet.tailPhase) % 3;
+        const tailSvg =
+          tailFrame === 0
+            ? `<rect x="22" y="13" width="2" height="3" fill="#9B86F2" />
+               <rect x="24" y="10" width="2" height="5" fill="#9B86F2" />
+               <rect x="25" y="8" width="2" height="3" fill="#B4A2FB" />`
+            : tailFrame === 1
+              ? `<rect x="22" y="13" width="2" height="3" fill="#9B86F2" />
+                 <rect x="24" y="11" width="2" height="4" fill="#9B86F2" />
+                 <rect x="24" y="9" width="2" height="2" fill="#B4A2FB" />`
+              : `<rect x="22" y="14" width="2" height="2" fill="#9B86F2" />
+                 <rect x="24" y="11" width="2" height="4" fill="#9B86F2" />
+                 <rect x="26" y="9" width="1" height="3" fill="#B4A2FB" />`;
+
+        return `
+          <svg viewBox="0 0 28 24">
+            <rect x="3" y="2" width="2" height="4" fill="#9B86F2" />
+            <rect x="5" y="4" width="2" height="2" fill="#9B86F2" />
+            <rect x="4" y="4" width="1" height="2" fill="#C4B5FD" />
+            <rect x="20" y="2" width="2" height="4" fill="#9B86F2" />
+            <rect x="18" y="4" width="2" height="2" fill="#9B86F2" />
+            <rect x="20" y="4" width="1" height="2" fill="#C4B5FD" />
+            <rect x="3" y="6" width="19" height="1" fill="#B4A2FB" />
+            <rect x="3" y="7" width="19" height="11" fill="#9B86F2" />
+            <rect x="3" y="17" width="19" height="1" fill="#7B66D6" />
+            <rect x="21" y="7" width="1" height="11" fill="#8873E3" />
+            ${tailSvg}
+            <rect x="5" y="18" width="2" height="${lA}" fill="#9B86F2" />
+            <rect x="9" y="18" width="2" height="${lB}" fill="#826DDB" />
+            <rect x="15" y="18" width="2" height="${lB}" fill="#826DDB" />
+            <rect x="19" y="18" width="2" height="${lA}" fill="#9B86F2" />
+            ${eyesSvg}
+            ${blushSvg}
+          </svg>
+        `;
+      }
+
+      class PixelMascot {
+        constructor({ id, species, startOffsetFromRight }) {
+          this.id = id;
+          this.species = species;
+          this.startOffsetFromRight = startOffsetFromRight;
+
+          this.x = 400;
+          this.y = 0;
+          this.vx = 0;
+          this.vy = 0;
+          this.facing = 1;
+
+          // 2nd-order spring physics for JUICY Q弹 jelly motion!
+          // squash > 0 => wide & short (squished); squash < 0 => narrow & tall (stretched)
+          this.squash = 0;
+          this.squashVel = 0;
+          this.targetSquash = 0;
+
+          this.rot = 0;
+          this.rotVel = 0;
+          this.targetRot = 0;
+
+          this.skewX = 0;
+
+          this.mood = 'idle';
+          this.actionIdx = 0;
+          this.actionTimer = 0;
+          this.activeAction = null;
+          this.idleRoutine = null;
+          this.idleRoutinePhase = 0;
+          this.idleRoutineIdx = species === 'coral' ? 0 : 1;
+          this.lastInteractAt = performance.now();
+
+          this.flipProgress = 0;
+          this.dancePhase = 0;
+          this.legPhase = 0;
+          this.isWalking = false;
+          this.tailPhase = Math.random() * 10;
+          this.breathPhase = Math.random() * Math.PI * 2;
+          this.blinking = false;
+          this.nextBlinkAt = performance.now() + 2000 + Math.random() * 2800;
+          // Very rare auto-walk (38-65s, low probability)
+          this.nextWanderAt = performance.now() + 38000 + Math.random() * 27000;
+          this.wanderTargetX = null;
+
+          this.eyeDx = 0;
+          this.eyeDy = 0;
+          this.lastSpriteKey = '';
+
+          this.dragging = false;
+          this.dragMoved = false;
+          this.dragOffsetX = 0;
+          this.dragOffsetY = 0;
+          this.lastDragX = 0;
+          this.lastDragY = 0;
+          this.dragVelX = 0;
+          this.dragVelY = 0;
+
+          this.stackedOn = null;
+          this.carrierOf = null;
+
+          this.el = document.createElement('div');
+          this.el.className = 'pet-actor';
+          this.spriteHost = document.createElement('div');
+          this.spriteHost.style.width = '100%';
+          this.spriteHost.style.height = '100%';
+          this.el.appendChild(this.spriteHost);
+          petLayerEl.appendChild(this.el);
+
+          this.bindPointer();
+        }
+
+        // Inject a Q弹 spring impulse (positive = squish flat, negative = stretch tall)
+        boing(strength = 0.22, rotKick = 0) {
+          this.squashVel += strength;
+          if (rotKick) this.rotVel += rotKick;
+        }
+
+        resetPosition() {
+          const w = stageEl.clientWidth || 720;
+          this.unstack();
+          this.x = Math.max(44, w - this.startOffsetFromRight);
+          this.y = 0;
+          this.vx = 0;
+          this.vy = 0;
+          this.squash = 0;
+          this.squashVel = 0;
+          this.targetSquash = 0;
+          this.rot = 0;
+          this.rotVel = 0;
+          this.targetRot = 0;
+          this.skewX = 0;
+          this.mood = 'idle';
+          this.activeAction = null;
+          this.idleRoutine = null;
+          this.wanderTargetX = null;
+          this.isWalking = false;
+          this.lastInteractAt = performance.now();
+          this.boing(0.16);
+        }
+
+        unstack() {
+          if (this.stackedOn) {
+            const bottom = this.stackedOn;
+            bottom.carrierOf = null;
+            this.stackedOn = null;
+            bottom.boing(-0.14); // bottom springs back up relieved!
+          }
+          if (this.carrierOf) {
+            const top = this.carrierOf;
+            top.stackedOn = null;
+            top.vy = -4.5;
+            top.boing(-0.15);
+            this.carrierOf = null;
+          }
+        }
+
+        isNearStackTarget(other) {
+          if (!other || other.stackedOn || other.dragging) return false;
+          return Math.abs(this.x - other.x) < 58 && Math.abs(this.y - (other.y - 34)) < 68;
+        }
+
+        bindPointer() {
+          this.el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.el.setPointerCapture(e.pointerId);
+            this.unstack();
+            this.dragging = true;
+            this.dragMoved = false;
+            this.activeAction = null;
+            this.idleRoutine = null;
+            this.wanderTargetX = null;
+            this.isWalking = false;
+            this.mood = 'surprised';
+            this.lastInteractAt = performance.now();
+            this.el.classList.add('dragging');
+            // Juicy pinch-lift vertical stretch!
+            this.boing(-0.2);
+
+            const stageRect = stageEl.getBoundingClientRect();
+            const px = e.clientX - stageRect.left;
+            const py = e.clientY - stageRect.top;
+            this.dragOffsetX = this.x - px;
+            this.dragOffsetY = this.y - py;
+            this.lastDragX = px;
+            this.lastDragY = py;
+            this.dragVelX = 0;
+            this.dragVelY = 0;
+          });
+
+          this.el.addEventListener('pointermove', (e) => {
+            if (!this.dragging) return;
+            const stageRect = stageEl.getBoundingClientRect();
+            const px = e.clientX - stageRect.left;
+            const py = e.clientY - stageRect.top;
+            const dx = px - this.lastDragX;
+            const dy = py - this.lastDragY;
+            if (Math.hypot(dx, dy) > 3) this.dragMoved = true;
+
+            this.dragVelX = this.dragVelX * 0.55 + dx * 0.45;
+            this.dragVelY = this.dragVelY * 0.55 + dy * 0.45;
+            this.x = px + this.dragOffsetX;
+            this.y = py + this.dragOffsetY;
+            this.targetRot = Math.max(-24, Math.min(24, this.dragVelX * 1.6));
+            this.targetSquash = Math.max(-0.22, Math.min(0.14, -Math.abs(this.dragVelY) * 0.015 - 0.08));
+            this.lastDragX = px;
+            this.lastDragY = py;
+
+            // Show subtle pixel chevron above the other mascot when in snap-stack range!
+            const other = mascots.find((m) => m !== this);
+            if (other && this.dragMoved && this.isNearStackTarget(other)) {
+              stackHintEl.style.transform = `translate3d(${other.x.toFixed(1)}px, ${(other.y - Math.sin(performance.now() * 0.012) * 3).toFixed(1)}px, 0)`;
+              stackHintEl.classList.add('show');
+            } else {
+              stackHintEl.classList.remove('show');
+            }
+          });
+
+          const finishDrag = (e) => {
+            if (!this.dragging) return;
+            try {
+              this.el.releasePointerCapture(e.pointerId);
+            } catch {
+              /* ignore */
+            }
+            this.dragging = false;
+            this.el.classList.remove('dragging');
+            stackHintEl.classList.remove('show');
+            this.targetRot = 0;
+            this.targetSquash = 0;
+            this.lastInteractAt = performance.now();
+
+            if (!this.dragMoved) {
+              this.mood = 'idle';
+              this.triggerNextClickAction();
+              return;
+            }
+
+            // Easy, super satisfying Drag-to-Stack!
+            const other = mascots.find((m) => m !== this);
+            if (other && this.isNearStackTarget(other)) {
+              this.stackedOn = other;
+              other.carrierOf = this;
+              this.vx = 0;
+              this.vy = 0;
+              this.mood = 'happy';
+              other.mood = 'happy';
+              other.idleRoutine = null;
+              // Synchronized double-mochi squish impact!
+              other.boing(0.28, (Math.random() - 0.5) * 4);
+              this.boing(0.22, (Math.random() - 0.5) * 3);
+              spawnPixelFx(other.x, other.y - 42, 'ring', 1);
+              spawnPixelFx(other.x, other.y - 46, 'star', 7);
+              return;
+            }
+
+            // Smooth throw physics
+            this.vx = Math.max(-10, Math.min(10, this.dragVelX * 0.72));
+            this.vy = Math.max(-12, Math.min(8, this.dragVelY * 0.72));
+            this.mood = 'surprised';
+          };
+
+          this.el.addEventListener('pointerup', finishDrag);
+          this.el.addEventListener('pointercancel', finishDrag);
+        }
+
+        triggerNextClickAction() {
+          this.lastInteractAt = performance.now();
+          this.idleRoutine = null;
+
+          // Pixel click burst right at pet!
+          spawnPixelFx(this.x, this.y - 22, 'ring', 1);
+
+          // If this pet is carrying another pet on its head -> wave-bounce BOTH!
+          if (this.carrierOf) {
+            this.boing(0.26);
+            this.vy = -6.2;
+            this.mood = 'happy';
+            const rider = this.carrierOf;
+            window.setTimeout(() => {
+              rider.boing(0.24, 5);
+              spawnPixelFx(rider.x, rider.y - 36, 'star', 6);
+            }, 65);
+            return;
+          }
+
+          // If riding on top of the other pet -> cute flip right on top!
+          if (this.stackedOn) {
+            this.flipProgress = 0.001;
+            this.boing(-0.22);
+            this.stackedOn.boing(0.2);
+            spawnPixelFx(this.x, this.y - 30, 'star', 6);
+            return;
+          }
+
+          // Wake up with Q弹 boing if napping
+          if (this.mood === 'sleep') {
+            this.mood = 'surprised';
+            this.vy = -6.2;
+            this.boing(-0.22);
+            spawnPixelFx(this.x, this.y - 34, 'bang', 2);
+            spawnPixelFx(this.x, this.y - 28, 'spark', 4);
+            return;
+          }
+
+          const act = ACTIONS[this.actionIdx % ACTIONS.length];
+          this.actionIdx++;
+          this.runAction(act);
+        }
+
+        runAction(id) {
+          this.activeAction = id;
+          this.idleRoutine = null;
+          this.wanderTargetX = null;
+          this.lastInteractAt = performance.now();
+
+          if (id === 'jump') {
+            this.mood = 'happy';
+            this.vy = -8.2;
+            this.boing(-0.24); // springy stretch upward!
+            spawnPixelFx(this.x, this.y - 32, 'star', 7);
+          } else if (id === 'flip') {
+            this.mood = 'happy';
+            this.vy = -9.0;
+            this.flipProgress = 0.001;
+            this.boing(-0.22);
+            spawnPixelFx(this.x, this.y - 12, 'spark', 6);
+          } else if (id === 'dance') {
+            this.mood = 'happy';
+            this.actionTimer = 96;
+            this.dancePhase = 0;
+            this.boing(0.2);
+            spawnPixelFx(this.x, this.y - 38, 'note', 4);
+          } else if (id === 'blush') {
+            this.mood = 'blush';
+            this.actionTimer = 110;
+            this.boing(0.24, 6);
+            spawnPixelFx(this.x, this.y - 38, 'heart', 5);
+          } else if (id === 'nap') {
+            this.mood = 'sleep';
+            this.actionTimer = 360;
+            this.targetSquash = 0.14;
+            this.boing(0.16);
+            spawnPixelFx(this.x + 12, this.y - 28, 'zzz', 2);
+          } else if (id === 'dash') {
+            this.mood = 'happy';
+            const w = stageEl.clientWidth || 720;
+            const dir = this.x > w * 0.5 ? -1 : 1;
+            this.facing = dir;
+            this.vx = dir * 8.2;
+            this.boing(0.22, dir * 10);
+            spawnPixelFx(this.x - dir * 14, this.y - 10, 'dust', 5);
+          } else if (id === 'highfive') {
+            const other = mascots.find((m) => m !== this);
+            if (other) {
+              other.unstack();
+              other.idleRoutine = null;
+              other.mood = 'happy';
+              const mid = Math.max(70, Math.min((stageEl.clientWidth || 720) - 100, (this.x + other.x) * 0.5));
+              this.wanderTargetX = mid - 26;
+              other.wanderTargetX = mid + 26;
+              this.activeAction = 'highfive_seek';
+              this.boing(-0.14);
+              other.boing(-0.14);
+            }
+          }
+        }
+
+        typingBob() {
+          if (this.dragging) return;
+          this.lastInteractAt = performance.now();
+          this.idleRoutine = null;
+          if (this.mood === 'sleep') this.mood = 'idle';
+          this.boing(0.15, (Math.random() - 0.5) * 4);
+          this.mood = 'happy';
+        }
+
+        update(now) {
+          const stageW = stageEl.clientWidth || 720;
+          const minX = 38;
+          const maxX = Math.max(115, stageW - 76);
+
+          if (now >= this.nextBlinkAt) {
+            this.blinking = !this.blinking;
+            this.nextBlinkAt = now + (this.blinking ? 115 : 2400 + Math.random() * 3400);
+          }
+
+          // Continuous idle routine activation after ~7.5s of stillness!
+          const idleMs = now - this.lastInteractAt;
+          if (
+            !this.dragging &&
+            !this.activeAction &&
+            !this.stackedOn &&
+            !activeTreat &&
+            this.wanderTargetX === null &&
+            this.y >= 0 &&
+            idleMs > 7500 &&
+            !this.idleRoutine
+          ) {
+            this.idleRoutine = IDLE_ROUTINES[this.idleRoutineIdx % IDLE_ROUTINES.length];
+            this.idleRoutineIdx++;
+            this.idleRoutinePhase = 0;
+          }
+
+          // Eye tracking (or idle curious looking)
+          if (this.idleRoutine === 'curious_look') {
+            this.eyeDx = Math.sin(now * 0.0022 + this.breathPhase) * 1.1;
+            this.eyeDy = Math.cos(now * 0.0017) * 0.7;
+          } else if (this.idleRoutine === 'buddy_gaze') {
+            const other = mascots.find((m) => m !== this);
+            if (other) {
+              this.eyeDx = Math.sign(other.x - this.x);
+              this.eyeDy = 0;
+            }
+          } else if (mouse.active) {
+            const rect = stageEl.getBoundingClientRect();
+            const mx = mouse.x - rect.left;
+            const my = mouse.y - rect.top;
+            const angle = Math.atan2(my - (this.y - 24), mx - this.x);
+            this.eyeDx = Math.cos(angle);
+            this.eyeDy = Math.sin(angle);
+          } else {
+            this.eyeDx *= 0.85;
+            this.eyeDy *= 0.85;
+          }
+
+          // Default gentle breathing mochi target squash
+          let desiredSquash = Math.sin(now * 0.0036 + this.breathPhase) * 0.032;
+          let desiredRot = 0;
+
+          if (this.dragging) {
+            desiredSquash = this.targetSquash;
+            desiredRot = this.targetRot;
+          } else if (this.stackedOn) {
+            this.x = this.stackedOn.x;
+            // Ride cleanly on top of bottom pet's real squished height!
+            const bottomHeightOffset = 34 * (1 - this.stackedOn.squash * 0.75);
+            this.y = this.stackedOn.y - bottomHeightOffset;
+            desiredRot = this.stackedOn.rot * 0.8 + Math.sin(now * 0.005) * 2.5;
+            this.isWalking = false;
+          } else {
+            if (activeTreat && this.mood !== 'sleep') {
+              this.idleRoutine = null;
+              this.wanderTargetX = activeTreat.x;
+            }
+
+            // Active click actions
+            if (this.activeAction === 'dance') {
+              this.actionTimer--;
+              this.dancePhase += 0.24;
+              desiredRot = Math.sin(this.dancePhase) * 13;
+              desiredSquash = Math.cos(this.dancePhase * 2) * 0.14;
+              if (this.actionTimer % 26 === 0) spawnPixelFx(this.x, this.y - 40, 'note', 1);
+              if (this.actionTimer <= 0) {
+                this.activeAction = null;
+                this.mood = 'idle';
+              }
+            } else if (this.activeAction === 'blush') {
+              this.actionTimer--;
+              desiredSquash = Math.sin(now * 0.016) * 0.07;
+              desiredRot = Math.sin(now * 0.014) * 5;
+              if (this.actionTimer % 28 === 0) spawnPixelFx(this.x, this.y - 38, 'heart', 1);
+              if (this.actionTimer <= 0) {
+                this.activeAction = null;
+                this.mood = 'idle';
+              }
+            } else if (this.mood === 'sleep' && this.activeAction === 'nap') {
+              this.actionTimer--;
+              desiredSquash = 0.14 + Math.sin(now * 0.003) * 0.045;
+              if (this.actionTimer % 54 === 0) spawnPixelFx(this.x + 12, this.y - 28, 'zzz', 1);
+              if (this.actionTimer <= 0) {
+                this.mood = 'idle';
+                this.activeAction = null;
+                this.boing(-0.14);
+              }
+            } else if (this.activeAction === 'highfive_seek') {
+              const other = mascots.find((m) => m !== this);
+              if (other && Math.abs(this.x - other.x) < 56) {
+                this.activeAction = null;
+                this.wanderTargetX = null;
+                other.wanderTargetX = null;
+                this.vy = -6.5;
+                other.vy = -6.5;
+                this.boing(-0.22);
+                other.boing(-0.22);
+                spawnPixelFx((this.x + other.x) * 0.5, -36, 'ring', 1);
+                spawnPixelFx((this.x + other.x) * 0.5, -40, 'star', 8);
+                spawnPixelFx((this.x + other.x) * 0.5, -44, 'heart', 3);
+              }
+            } else if (this.idleRoutine) {
+              // Continuous cozy idle routines!
+              this.idleRoutinePhase++;
+              if (this.idleRoutine === 'cozy_nap') {
+                this.mood = 'sleep';
+                desiredSquash = 0.14 + Math.sin(now * 0.0028 + this.breathPhase) * 0.05;
+                if (this.idleRoutinePhase % 68 === 10) {
+                  spawnPixelFx(this.x + 12, this.y - 28, 'zzz', 1);
+                }
+              } else if (this.idleRoutine === 'mochi_bounce') {
+                this.mood = 'happy';
+                desiredSquash = Math.sin(now * 0.0085 + this.breathPhase) * 0.11;
+                desiredRot = Math.sin(now * 0.0042 + this.breathPhase) * 5;
+                if (this.idleRoutinePhase % 95 === 20) {
+                  spawnPixelFx(this.x, this.y - 40, 'note', 1);
+                }
+              } else if (this.idleRoutine === 'curious_look') {
+                this.mood = 'idle';
+                desiredRot = Math.sin(now * 0.0022 + this.breathPhase) * 7;
+                desiredSquash = Math.sin(now * 0.0044) * 0.04;
+              } else if (this.idleRoutine === 'buddy_gaze') {
+                this.mood = 'blush';
+                desiredSquash = Math.sin(now * 0.005 + this.breathPhase) * 0.06;
+                if (this.idleRoutinePhase % 110 === 30) {
+                  spawnPixelFx(this.x, this.y - 40, 'heart', 1);
+                }
+              }
+
+              // Gently rotate to a different continuous idle routine every ~12s
+              if (this.idleRoutinePhase > 720) {
+                this.mood = 'idle';
+                this.idleRoutine = IDLE_ROUTINES[this.idleRoutineIdx % IDLE_ROUTINES.length];
+                this.idleRoutineIdx++;
+                this.idleRoutinePhase = 0;
+                this.boing(0.1);
+              }
+            }
+
+            // Movement (only when chasing treat, high-fiving, or ultra-rare micro-shuffle)
+            this.isWalking = false;
+            if (this.wanderTargetX !== null && this.y >= -0.5) {
+              const diff = this.wanderTargetX - this.x;
+              const speed = activeTreat ? 2.2 : 1.05;
+              if (Math.abs(diff) <= speed + 2) {
+                this.wanderTargetX = null;
+                if (activeTreat && Math.abs(this.x - activeTreat.x) < 30) {
+                  spawnPixelFx(activeTreat.x, -12, 'crumb', 8);
+                  spawnPixelFx(this.x, -36, 'ring', 1);
+                  spawnPixelFx(this.x, -42, 'heart', 4);
+                  activeTreat.el.remove();
+                  activeTreat = null;
+                  this.vy = -5.8;
+                  this.boing(-0.24);
+                  this.mood = 'happy';
+                }
+              } else {
+                this.isWalking = true;
+                this.facing = Math.sign(diff);
+                this.x += this.facing * speed;
+                this.legPhase = (this.legPhase + (activeTreat ? 0.14 : 0.08)) % 1;
+                // Cute soft step-bob while trotting
+                desiredSquash = Math.sin(this.legPhase * Math.PI * 2) * 0.06;
+              }
+            } else if (this.y >= 0 && !this.activeAction && !this.idleRoutine && now >= this.nextWanderAt) {
+              // Very rare, tiny stroll (almost never auto-walks!)
+              this.nextWanderAt = now + 42000 + Math.random() * 28000;
+              if (Math.random() < 0.15) {
+                const shift = (Math.random() - 0.5) * 60;
+                this.wanderTargetX = Math.max(minX, Math.min(maxX, this.x + shift));
+              }
+            }
+
+            // Smooth physics: ONE clean landing cushion -> juicy Q弹 spring squash, ZERO multi-bounce jitter!
+            if (this.y < 0 || this.vy !== 0 || Math.abs(this.vx) > 0.08) {
+              this.vy += GRAVITY;
+              this.x += this.vx;
+              this.y += this.vy;
+              this.vx *= this.y >= 0 ? 0.78 : 0.985;
+              if (Math.abs(this.vx) < 0.08 && this.y >= 0) this.vx = 0;
+
+              // Subtle midair vertical stretch
+              if (this.y < -4) {
+                desiredSquash = Math.max(-0.18, Math.min(0.12, -Math.abs(this.vy) * 0.014));
+              }
+
+              if (this.y >= 0) {
+                const impact = this.vy;
+                this.y = 0;
+                this.vy = 0;
+                if (impact > 1.8) {
+                  // Single silky mochi landing squish — super Q弹, zero jitter!
+                  this.boing(Math.min(0.28, impact * 0.032));
+                  if (impact > 4.2) spawnPixelFx(this.x, -4, 'dust', 3);
+                }
+                if (this.mood === 'surprised') this.mood = 'idle';
+              }
+            }
+
+            if (this.x < minX) {
+              this.x = minX;
+              this.vx = Math.abs(this.vx) * 0.35;
+              this.boing(0.14);
+            } else if (this.x > stageW - 28) {
+              this.x = stageW - 28;
+              this.vx = -Math.abs(this.vx) * 0.35;
+              this.boing(0.14);
+            }
+
+            // Cactus prickle hop + cactus spring wobble!
+            const cactusX = stageW - 31;
+            if (Math.abs(this.x - cactusX) < 24 && this.y > -20) {
+              this.vx = -4.8;
+              this.vy = -5.8;
+              this.mood = 'surprised';
+              this.idleRoutine = null;
+              this.wanderTargetX = null;
+              this.boing(-0.22, -10);
+              cactusSpring.squashVel += 0.24;
+              cactusSpring.rotVel += 9;
+              spawnPixelFx(cactusX, -28, 'bang', 2);
+              spawnPixelFx(cactusX, -32, 'petal', 4);
+            }
+          }
+
+          // Integrate 2nd-order Q弹 squash spring
+          const squashForce = (desiredSquash - this.squash) * 0.25;
+          this.squashVel = (this.squashVel + squashForce) * 0.72;
+          this.squash += this.squashVel;
+          this.squash = Math.max(-0.34, Math.min(0.36, this.squash));
+
+          // Integrate rotation spring (or 360 flip)
+          if (this.flipProgress > 0) {
+            this.flipProgress += 0.044;
+            this.rot = this.flipProgress * 360 * this.facing;
+            if (this.flipProgress >= 1) {
+              this.flipProgress = 0;
+              this.rot = 0;
+              this.rotVel = 0;
+            }
+          } else {
+            const rotForce = (desiredRot - this.rot) * 0.22;
+            this.rotVel = (this.rotVel + rotForce) * 0.76;
+            this.rot += this.rotVel;
+          }
+
+          // Subtle horizontal jelly skew during fast movement or drag
+          const targetSkew = this.dragging
+            ? Math.max(-10, Math.min(10, -this.dragVelX * 0.65))
+            : Math.max(-8, Math.min(8, -this.vx * 0.8));
+          this.skewX += (targetSkew - this.skewX) * 0.25;
+
+          this.renderDom(now);
+        }
+
+        renderDom(now) {
+          const key = buildSpriteKey(this, now);
+          if (key !== this.lastSpriteKey) {
+            this.lastSpriteKey = key;
+            this.spriteHost.innerHTML = renderSpriteSvg(this, now);
+          }
+          const sx = 1 + this.squash;
+          const sy = 1 - this.squash;
+          this.el.style.transform = `translate3d(${this.x.toFixed(1)}px, ${this.y.toFixed(1)}px, 0) rotate(${this.rot.toFixed(1)}deg) skewX(${this.skewX.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+        }
+      }
+
+      const coral = new PixelMascot({
+        id: 'coral',
+        species: 'coral',
+        startOffsetFromRight: 162,
+      });
+
+      const lavender = new PixelMascot({
+        id: 'lavender',
+        species: 'lavender',
+        startOffsetFromRight: 86,
+      });
+
+      const mascots = [coral, lavender];
+      mascots.forEach((m) => m.resetPosition());
+
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          mouse.x = e.clientX;
+          mouse.y = e.clientY;
+          mouse.active = true;
+        },
+        { passive: true },
+      );
+
+      // Q弹 Cactus click!
+      cactusEl.addEventListener('click', () => {
+        cactusSpring.squashVel += 0.28;
+        cactusSpring.rotVel += (Math.random() > 0.5 ? 1 : -1) * 8;
+        const cactusX = (stageEl.clientWidth || 720) - 31;
+        spawnPixelFx(cactusX, -32, 'ring', 1);
+        spawnPixelFx(cactusX, -36, 'petal', 5);
+        spawnPixelFx(cactusX, -38, 'star', 4);
+      });
+
+      demoInputEl.addEventListener('input', () => {
+        mascots.forEach((m) => m.typingBob());
+      });
+
+      document.getElementById('btn-send').addEventListener('click', () => {
+        mascots.forEach((m) => {
+          m.unstack();
+          m.runAction('jump');
+        });
+      });
+
+      document.getElementById('btn-treat').addEventListener('click', () => {
+        if (activeTreat) activeTreat.el.remove();
+        const w = stageEl.clientWidth || 720;
+        const tx = 70 + Math.random() * Math.max(120, w - 200);
+        const el = document.createElement('div');
+        el.className = 'treat-item';
+        el.style.left = `${tx}px`;
+        el.innerHTML = `<svg viewBox="0 0 8 8"><rect x="1" y="1" width="6" height="6" fill="#FBBF24"/><rect x="2" y="2" width="1" height="1" fill="#92400E"/><rect x="5" y="3" width="1" height="1" fill="#92400E"/><rect x="3" y="5" width="1" height="1" fill="#92400E"/></svg>`;
+        petLayerEl.appendChild(el);
+        activeTreat = { x: tx, y: -42, vy: 0, squash: -0.2, squashVel: 0, el };
+        mascots.forEach((m) => {
+          m.unstack();
+          m.idleRoutine = null;
+          if (m.mood === 'sleep') m.mood = 'idle';
+          m.boing(-0.15);
+        });
+      });
+
+      document.getElementById('btn-stack').addEventListener('click', () => {
+        coral.unstack();
+        lavender.unstack();
+        coral.idleRoutine = null;
+        lavender.idleRoutine = null;
+        lavender.stackedOn = coral;
+        coral.carrierOf = lavender;
+        lavender.mood = 'happy';
+        coral.mood = 'happy';
+        coral.boing(0.28);
+        lavender.boing(0.22);
+        spawnPixelFx(coral.x, coral.y - 48, 'ring', 1);
+        spawnPixelFx(coral.x, coral.y - 52, 'star', 7);
+      });
+
+      document.getElementById('btn-party').addEventListener('click', () => {
+        mascots.forEach((m) => {
+          m.unstack();
+          m.runAction('dance');
+        });
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        if (activeTreat) {
+          activeTreat.el.remove();
+          activeTreat = null;
+        }
+        mascots.forEach((m) => m.resetPosition());
+      });
+
+      function loop(now) {
+        for (const m of mascots) m.update(now);
+
+        // Update Q弹 cactus spring
+        cactusSpring.squashVel = (cactusSpring.squashVel + (0 - cactusSpring.squash) * 0.24) * 0.72;
+        cactusSpring.squash += cactusSpring.squashVel;
+        cactusSpring.rotVel = (cactusSpring.rotVel + (0 - cactusSpring.rot) * 0.2) * 0.75;
+        cactusSpring.rot += cactusSpring.rotVel;
+        const csx = 1 + cactusSpring.squash;
+        const csy = 1 - cactusSpring.squash;
+        cactusEl.style.transform = `rotate(${cactusSpring.rot.toFixed(1)}deg) scale(${csx.toFixed(3)}, ${csy.toFixed(3)})`;
+
+        // Update falling Q弹 pixel treat
+        if (activeTreat) {
+          if (activeTreat.y < 0) {
+            activeTreat.vy += 0.65;
+            activeTreat.y += activeTreat.vy;
+            if (activeTreat.y >= 0) {
+              activeTreat.y = 0;
+              activeTreat.vy = 0;
+              activeTreat.squashVel += 0.26;
+              spawnPixelFx(activeTreat.x, -4, 'dust', 3);
+            }
+          }
+          activeTreat.squashVel = (activeTreat.squashVel + (0 - activeTreat.squash) * 0.26) * 0.72;
+          activeTreat.squash += activeTreat.squashVel;
+          const tsx = 1 + activeTreat.squash;
+          const tsy = 1 - activeTreat.squash;
+          activeTreat.el.style.transform = `translate3d(0, ${activeTreat.y.toFixed(1)}px, 0) scale(${tsx.toFixed(3)}, ${tsy.toFixed(3)})`;
+        }
+
+        // Update Q弹 pixel particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.vy += p.grav;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= p.decay;
+
+          // Spring pop-in scale for juicy pixel VFX!
+          const targetS = p.life < 0.25 ? 0 : p.targetScale;
+          p.scaleVel = (p.scaleVel + (targetS - p.scale) * 0.28) * 0.72;
+          p.scale = Math.max(0, p.scale + p.scaleVel);
+
+          if (p.life <= 0) {
+            p.el.remove();
+            particles.splice(i, 1);
+          } else {
+            p.el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) scale(${p.scale.toFixed(2)})`;
+            p.el.style.opacity = Math.min(1, p.life * 1.4).toFixed(2);
+          }
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>

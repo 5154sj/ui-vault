@@ -1,22 +1,23 @@
 {
   "id": "2026-11-pixel-edge-mascots",
-  "title": "输入框边缘双像素吉祥物（可点击多动作 / 物理拖拽 / 叠罗汉 / 喂食互动）",
+  "title": "Obsidian Prism 原版双像素吉祥物骨架引擎（Dual Mascot Rig）",
   "kind": "motion",
   "theme": "dark",
-  "summary": "栖息在暗黑输入框/卡片右上边缘的珊瑚像素小蟹与薰衣草像素小猫（配迷你盆栽仙人掌），支持每次点击切换 7 种像素动作、拎起惯性拖拽抛掷、拖到一起叠罗汉、仙人掌扎脚弹跳、眼神跟随、打字节拍响应与撒零食竞速。",
+  "summary": "收录 Obsidian Prism 原版 dual-mascot-rig.js（GPL-3.0）完整双宠像素骨架、整数格接缝挤压引擎、40+ 手工 RLE 动作道具（喂甜甜圈/热咖啡/种花/蝴蝶/荧光棒/小火炉/冲浪/打盹/仙人掌/台灯/沙漏/迷你小蟹堆）、物理抛掷叠罗汉与棱镜边反光联动（同时保留轻量 Q弹 SVG 变体 preview-mochi-svg.html）。",
   "tags": [
+    "obsidian-prism",
     "mascot",
     "pixel-art",
-    "interactive",
+    "clawd",
+    "cat",
     "draggable",
+    "stacking",
     "physics",
-    "micro-interaction",
+    "canvas",
     "dark",
-    "prompt-box",
-    "pet",
     "motion"
   ],
-  "source": "Obsidian Prism 双像素吉祥物截图 + 扩展多动作拖拽互动创意",
-  "stack": ["html-css", "react-tailwind"],
+  "source": "Obsidian Prism (RMvdesi, https://github.com/RMvdesi/obsidian-prism, GPL-3.0-only) — dual-mascot-rig.js",
+  "stack": ["html-css", "canvas-2d", "react-tailwind"],
   "createdAt": "2026-11-26"
 }

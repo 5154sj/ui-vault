@@ -29,43 +29,47 @@ export const PixelEdgeMascots: React.FC<PixelEdgeMascotsProps> = ({
         el.animate(
           [
             { transform: 'translateY(0) scale(1, 1)' },
-            { transform: 'translateY(1px) scale(1.07, 0.93)', offset: 0.14 },
-            { transform: 'translateY(-30px) scale(0.94, 1.07)', offset: 0.5 },
-            { transform: 'translateY(0) scale(1.06, 0.94)', offset: 0.86 },
+            { transform: 'translateY(2px) scale(1.22, 0.78)', offset: 0.14 },
+            { transform: 'translateY(-32px) scale(0.84, 1.18)', offset: 0.48 },
+            { transform: 'translateY(0) scale(1.20, 0.82)', offset: 0.78 },
+            { transform: 'translateY(0) scale(0.94, 1.07)', offset: 0.9 },
             { transform: 'translateY(0) scale(1, 1)' },
           ],
-          { duration: 540, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { duration: 640, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
         );
       } else if (act === 'flip') {
         el.animate(
           [
-            { transform: 'translateY(0) rotate(0deg)' },
-            { transform: 'translateY(-34px) rotate(180deg)', offset: 0.5 },
-            { transform: 'translateY(0) rotate(360deg)' },
+            { transform: 'translateY(0) rotate(0deg) scale(1, 1)' },
+            { transform: 'translateY(2px) rotate(0deg) scale(1.18, 0.82)', offset: 0.12 },
+            { transform: 'translateY(-36px) rotate(180deg) scale(0.88, 1.14)', offset: 0.5 },
+            { transform: 'translateY(0) rotate(360deg) scale(1.18, 0.84)', offset: 0.82 },
+            { transform: 'translateY(0) rotate(360deg) scale(1, 1)' },
           ],
-          { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { duration: 660, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
         );
       } else if (act === 'dance') {
         el.animate(
           [
-            { transform: 'rotate(0deg)' },
-            { transform: 'rotate(-10deg) translateY(-4px)' },
-            { transform: 'rotate(10deg) translateY(-4px)' },
-            { transform: 'rotate(-7deg) translateY(-2px)' },
-            { transform: 'rotate(7deg) translateY(-2px)' },
-            { transform: 'rotate(0deg)' },
+            { transform: 'rotate(0deg) scale(1, 1)' },
+            { transform: 'rotate(-13deg) scale(1.14, 0.88)' },
+            { transform: 'rotate(13deg) scale(0.9, 1.12)' },
+            { transform: 'rotate(-10deg) scale(1.12, 0.9)' },
+            { transform: 'rotate(10deg) scale(0.92, 1.09)' },
+            { transform: 'rotate(0deg) scale(1, 1)' },
           ],
-          { duration: 720, easing: 'ease-in-out' },
+          { duration: 760, easing: 'ease-in-out' },
         );
       } else {
         el.animate(
           [
-            { transform: 'scale(1)' },
-            { transform: 'scale(1.08, 0.93)' },
-            { transform: 'scale(0.97, 1.04)' },
-            { transform: 'scale(1)' },
+            { transform: 'scale(1, 1)' },
+            { transform: 'scale(1.22, 0.80)' },
+            { transform: 'scale(0.90, 1.12)' },
+            { transform: 'scale(1.06, 0.95)' },
+            { transform: 'scale(1, 1)' },
           ],
-          { duration: 440, easing: 'ease-out' },
+          { duration: 540, easing: 'ease-out' },
         );
       }
     };

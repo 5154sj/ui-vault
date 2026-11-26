@@ -1,16 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
 export interface PixelEdgeMascotsProps {
-  /** Attach as a child inside any `position: relative` card/prompt container. */
   showCactus?: boolean;
   onAction?: (petName: string, actionLabel: string) => void;
 }
 
 /**
- * Lightweight drop-in React overlay for the dual pixel mascots (Coral Crab + Lavender Cat)
- * perched on the top-right edge of a dark card or chat input box.
- * Full standalone interactive playground (including piggyback stacking, treat race,
- * throw physics, and typing bob) lives in `preview.html`.
+ * Fine-grained 28x24 pixel-art mascots (Coral Crab + Lavender Cat + 20x24 Potted Cactus)
+ * with subtle landing squash and zero floating text bubbles.
  */
 export const PixelEdgeMascots: React.FC<PixelEdgeMascotsProps> = ({
   showCactus = true,
@@ -32,49 +29,49 @@ export const PixelEdgeMascots: React.FC<PixelEdgeMascotsProps> = ({
         el.animate(
           [
             { transform: 'translateY(0) scale(1, 1)' },
-            { transform: 'translateY(2px) scale(1.18, 0.82)', offset: 0.15 },
-            { transform: 'translateY(-34px) scale(0.88, 1.16)', offset: 0.5 },
-            { transform: 'translateY(0) scale(1.16, 0.84)', offset: 0.85 },
+            { transform: 'translateY(1px) scale(1.07, 0.93)', offset: 0.14 },
+            { transform: 'translateY(-30px) scale(0.94, 1.07)', offset: 0.5 },
+            { transform: 'translateY(0) scale(1.06, 0.94)', offset: 0.86 },
             { transform: 'translateY(0) scale(1, 1)' },
           ],
-          { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { duration: 540, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
         );
       } else if (act === 'flip') {
         el.animate(
           [
             { transform: 'translateY(0) rotate(0deg)' },
-            { transform: 'translateY(-38px) rotate(180deg)', offset: 0.5 },
+            { transform: 'translateY(-34px) rotate(180deg)', offset: 0.5 },
             { transform: 'translateY(0) rotate(360deg)' },
           ],
-          { duration: 580, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
         );
       } else if (act === 'dance') {
         el.animate(
           [
             { transform: 'rotate(0deg)' },
-            { transform: 'rotate(-14deg) translateY(-6px)' },
-            { transform: 'rotate(14deg) translateY(-6px)' },
             { transform: 'rotate(-10deg) translateY(-4px)' },
             { transform: 'rotate(10deg) translateY(-4px)' },
+            { transform: 'rotate(-7deg) translateY(-2px)' },
+            { transform: 'rotate(7deg) translateY(-2px)' },
             { transform: 'rotate(0deg)' },
           ],
-          { duration: 760, easing: 'ease-in-out' },
+          { duration: 720, easing: 'ease-in-out' },
         );
       } else {
         el.animate(
           [
             { transform: 'scale(1)' },
-            { transform: 'scale(1.14, 0.88)' },
-            { transform: 'scale(0.95, 1.08)' },
+            { transform: 'scale(1.08, 0.93)' },
+            { transform: 'scale(0.97, 1.04)' },
             { transform: 'scale(1)' },
           ],
-          { duration: 480, easing: 'ease-out' },
+          { duration: 440, easing: 'ease-out' },
         );
       }
     };
 
-    const onCoralClick = () => trigger(coralRef.current, '珊瑚小蟹', cIdx++);
-    const onCatClick = () => trigger(catRef.current, '薰衣草小猫', lIdx++);
+    const onCoralClick = () => trigger(coralRef.current, 'coral', cIdx++);
+    const onCatClick = () => trigger(catRef.current, 'lavender', lIdx++);
     const cEl = coralRef.current;
     const lEl = catRef.current;
     cEl?.addEventListener('click', onCoralClick);
@@ -98,55 +95,70 @@ export const PixelEdgeMascots: React.FC<PixelEdgeMascotsProps> = ({
     >
       <div
         ref={coralRef}
-        title="点击互动：珊瑚小蟹"
         style={{
           position: 'absolute',
-          right: 108,
-          top: -36,
-          width: 44,
-          height: 38,
+          right: 120,
+          top: -45,
+          width: 56,
+          height: 48,
           pointerEvents: 'auto',
           cursor: 'pointer',
+          transformOrigin: '50% 94%',
         }}
       >
-        <svg viewBox="0 0 16 14" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
-          <rect x="2" y="2" width="12" height="8" fill="#D97856" />
-          <rect x="0" y="6" width="2" height="2" fill="#D97856" />
-          <rect x="14" y="6" width="2" height="2" fill="#D97856" />
-          <rect x="3" y="10" width="1.4" height="2.6" fill="#D97856" />
-          <rect x="5.2" y="10" width="1.4" height="2.6" fill="#BD6243" />
-          <rect x="9.4" y="10" width="1.4" height="2.6" fill="#BD6243" />
-          <rect x="11.6" y="10" width="1.4" height="2.6" fill="#D97856" />
-          <rect x="4.5" y="5" width="1.3" height="2.6" fill="#18171A" />
-          <rect x="10.5" y="5" width="1.3" height="2.6" fill="#18171A" />
+        <svg viewBox="0 0 28 24" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
+          <rect x="4" y="5" width="20" height="1" fill="#E89070" />
+          <rect x="4" y="6" width="20" height="12" fill="#DC7A58" />
+          <rect x="4" y="17" width="20" height="1" fill="#BD5F40" />
+          <rect x="23" y="6" width="1" height="12" fill="#C96A4A" />
+          <rect x="1" y="12" width="3" height="4" fill="#DC7A58" />
+          <rect x="1" y="12" width="3" height="1" fill="#E89070" />
+          <rect x="1" y="15" width="3" height="1" fill="#BD5F40" />
+          <rect x="24" y="12" width="3" height="4" fill="#DC7A58" />
+          <rect x="24" y="12" width="3" height="1" fill="#E89070" />
+          <rect x="24" y="15" width="3" height="1" fill="#BD5F40" />
+          <rect x="6" y="18" width="2" height="5" fill="#DC7A58" />
+          <rect x="10" y="18" width="2" height="4" fill="#C46444" />
+          <rect x="16" y="18" width="2" height="4" fill="#C46444" />
+          <rect x="20" y="18" width="2" height="5" fill="#DC7A58" />
+          <rect x="8" y="10" width="2" height="4" fill="#161518" />
+          <rect x="18" y="10" width="2" height="4" fill="#161518" />
         </svg>
       </div>
 
       <div
         ref={catRef}
-        title="点击互动：薰衣草小猫"
         style={{
           position: 'absolute',
-          right: 40,
-          top: -36,
-          width: 44,
-          height: 38,
+          right: 46,
+          top: -45,
+          width: 56,
+          height: 48,
           pointerEvents: 'auto',
           cursor: 'pointer',
+          transformOrigin: '50% 94%',
         }}
       >
-        <svg viewBox="0 0 16 14" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
-          <rect x="2" y="0" width="2" height="2" fill="#9B87F5" />
-          <rect x="11" y="0" width="2" height="2" fill="#9B87F5" />
-          <rect x="2" y="2" width="11" height="8" fill="#9B87F5" />
-          <rect x="13" y="7" width="1.5" height="2" fill="#9B87F5" />
-          <rect x="14" y="4" width="1.5" height="3.5" fill="#9B87F5" />
-          <rect x="3" y="10" width="1.4" height="2.6" fill="#9B87F5" />
-          <rect x="5" y="10" width="1.4" height="2.6" fill="#7E6AD8" />
-          <rect x="8.8" y="10" width="1.4" height="2.6" fill="#7E6AD8" />
-          <rect x="10.8" y="10" width="1.4" height="2.6" fill="#9B87F5" />
-          <rect x="4.5" y="5" width="1.3" height="2.6" fill="#18171A" />
-          <rect x="10.5" y="5" width="1.3" height="2.6" fill="#18171A" />
+        <svg viewBox="0 0 28 24" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
+          <rect x="3" y="2" width="2" height="4" fill="#9B86F2" />
+          <rect x="5" y="4" width="2" height="2" fill="#9B86F2" />
+          <rect x="4" y="4" width="1" height="2" fill="#C4B5FD" />
+          <rect x="20" y="2" width="2" height="4" fill="#9B86F2" />
+          <rect x="18" y="4" width="2" height="2" fill="#9B86F2" />
+          <rect x="20" y="4" width="1" height="2" fill="#C4B5FD" />
+          <rect x="3" y="6" width="19" height="1" fill="#B4A2FB" />
+          <rect x="3" y="7" width="19" height="11" fill="#9B86F2" />
+          <rect x="3" y="17" width="19" height="1" fill="#7B66D6" />
+          <rect x="21" y="7" width="1" height="11" fill="#8873E3" />
+          <rect x="22" y="13" width="2" height="3" fill="#9B86F2" />
+          <rect x="24" y="10" width="2" height="5" fill="#9B86F2" />
+          <rect x="25" y="8" width="2" height="3" fill="#B4A2FB" />
+          <rect x="5" y="18" width="2" height="5" fill="#9B86F2" />
+          <rect x="9" y="18" width="2" height="4" fill="#826DDB" />
+          <rect x="15" y="18" width="2" height="4" fill="#826DDB" />
+          <rect x="19" y="18" width="2" height="5" fill="#9B86F2" />
+          <rect x="7" y="10" width="2" height="4" fill="#161518" />
+          <rect x="16" y="10" width="2" height="4" fill="#161518" />
         </svg>
       </div>
 
@@ -154,22 +166,27 @@ export const PixelEdgeMascots: React.FC<PixelEdgeMascotsProps> = ({
         <div
           style={{
             position: 'absolute',
-            right: 4,
-            top: -26,
-            width: 24,
-            height: 28,
+            right: 2,
+            top: -33,
+            width: 30,
+            height: 36,
             pointerEvents: 'none',
           }}
         >
-          <svg viewBox="0 0 12 14" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
-            <rect x="5" y="1" width="2" height="2" fill="#E57A54" />
-            <rect x="5" y="3" width="2" height="7" fill="#73A98E" />
-            <rect x="2" y="5" width="1" height="3" fill="#73A98E" />
-            <rect x="3" y="7" width="2" height="1" fill="#73A98E" />
-            <rect x="9" y="4" width="1" height="3" fill="#55876F" />
-            <rect x="7" y="6" width="2" height="1" fill="#55876F" />
-            <rect x="3" y="10" width="6" height="1" fill="#9C7B68" />
-            <rect x="4" y="11" width="4" height="3" fill="#7C6253" />
+          <svg viewBox="0 0 20 24" style={{ width: '100%', height: '100%', shapeRendering: 'crispEdges' }}>
+            <rect x="9" y="1" width="2" height="1" fill="#F08A64" />
+            <rect x="8" y="2" width="4" height="2" fill="#E87D55" />
+            <rect x="9" y="2" width="2" height="1" fill="#FCD34D" />
+            <rect x="8" y="4" width="4" height="13" fill="#73A98E" />
+            <rect x="8" y="5" width="1" height="11" fill="#8EC4A9" />
+            <rect x="11" y="5" width="1" height="12" fill="#53846C" />
+            <rect x="3" y="8" width="2" height="5" fill="#73A98E" />
+            <rect x="5" y="11" width="3" height="2" fill="#73A98E" />
+            <rect x="15" y="6" width="2" height="5" fill="#53846C" />
+            <rect x="12" y="9" width="3" height="2" fill="#53846C" />
+            <rect x="5" y="17" width="10" height="2" fill="#9D7B68" />
+            <rect x="6" y="19" width="8" height="4" fill="#7C5E4D" />
+            <rect x="7" y="23" width="6" height="1" fill="#63493B" />
           </svg>
         </div>
       )}

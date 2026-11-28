@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smoked Liquid Glass Hub · UI Vault Preview</title>
+    <style>
+      :root {
+        --bg-outer: #07090d;
+        --glass-fill: rgba(255, 255, 255, 0.056);
+        --glass-fill-hover: rgba(255, 255, 255, 0.105);
+        --glass-fill-active: rgba(255, 255, 255, 0.165);
+        --text-1: rgba(255, 255, 255, 0.92);
+        --text-2: rgba(255, 255, 255, 0.74);
+        --text-3: rgba(255, 255, 255, 0.46);
+        --blur: blur(24px) saturate(145%);
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% 0%, #141923 0%, var(--bg-outer) 72%);
+        color: var(--text-1);
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* =====================================================================
+         DESKTOP WINDOW SHELL
+         ===================================================================== */
+      .hub-window {
+        position: relative;
+        width: min(1140px, 100%);
+        height: min(670px, calc(100vh - 40px));
+        min-height: 540px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #0b0e14;
+        box-shadow:
+          0 32px 84px rgba(0, 0, 0, 0.72),
+          0 0 0 1px rgba(255, 255, 255, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        display: flex;
+        flex-direction: column;
+        isolation: isolate;
+      }
+
+      /* =====================================================================
+         LAYER 1: PROCEDURAL SCULPTED ANODIZED OBSIDIAN 3D BACKDROP
+         ===================================================================== */
+      .backdrop-stage {
+        position: absolute;
+        inset: -24px;
+        z-index: 0;
+        pointer-events: none;
+        transition: transform 0.6s var(--ease), filter 0.5s ease;
+      }
+
+      .backdrop-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* Fine anodized micro-grain to eliminate gradient banding */
+      .backdrop-grain {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.048;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      /* =====================================================================
+         LAYER 2: SIGNATURE SMOKED LIQUID GLASS PRIMITIVE
+         ===================================================================== */
+      .glass-pill {
+        --mx: 50%;
+        --my: 50%;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        height: 36px;
+        border-radius: 999px;
+        background: var(--glass-fill);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
+        box-shadow:
+          0 10px 26px rgba(0, 0, 0, 0.36),
+          inset 0 1px 0.6px rgba(255, 255, 255, 0.22),
+          inset 0 -1px 0.6px rgba(255, 255, 255, 0.06);
+        transition: background 200ms var(--ease), transform 200ms var(--ease), box-shadow 200ms var(--ease);
+      }
+
+      /* Non-uniform diagonal specular rim light (the real Liquid Glass secret!) */
+      .glass-pill::before,
+      .device-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        pointer-events: none;
+        background: linear-gradient(
+          142deg,
+          rgba(255, 255, 255, 0.42) 0%,
+          rgba(255, 255, 255, 0.12) 28%,
+          rgba(255, 255, 255, 0.04) 66%,
+          rgba(255, 255, 255, 0.24) 100%
+        );
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+      }
+
+      /* Subtle cursor-reactive surface sheen */
+      .glass-pill::after,
+      .device-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(
+          130px circle at var(--mx) var(--my),
+          rgba(255, 255, 255, 0.16),
+          transparent 72%
+        );
+        transition: opacity 220ms ease;
+      }
+
+      .glass-pill:hover::after,
+      .device-card:hover::after {
+        opacity: 1;
+      }
+
+      /* =====================================================================
+         TOP FLOATING ISLAND NAVIGATION BAR
+         ===================================================================== */
+      .topbar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px 10px;
+        flex-wrap: wrap;
+      }
+
+      .topbar-left,
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .brand-pill {
+        padding: 0 16px;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--text-1);
+        cursor: pointer;
+      }
+
+      .nav-pill {
+        padding: 3px;
+        gap: 2px;
+      }
+
+      .nav-item {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 14px;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text-2);
+        font-size: 12.5px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: color 180ms ease, background 180ms ease;
+      }
+
+      .nav-item:hover {
+        color: var(--text-1);
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .nav-item.active {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.14);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+
+      .single-action-pill {
+        padding: 0 15px;
+        gap: 6px;
+        border: none;
+        color: var(--text-2);
+        font-size: 12.5px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      .single-action-pill:hover {
+        color: var(--text-1);
+        background: var(--glass-fill-hover);
+      }
+
+      .utility-pill {
+        padding: 3px 6px;
+        gap: 4px;
+      }
+
+      .avatar-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+        border: 1.5px solid rgba(255, 255, 255, 0.55);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        cursor: pointer;
+        margin-right: 2px;
+      }
+
+      .util-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        color: var(--text-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease, transform 160ms var(--ease);
+      }
+
+      .util-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.11);
+      }
+
+      .util-btn:active {
+        transform: scale(0.92);
+      }
+
+      .win-orb {
+        width: 34px;
+        height: 34px;
+        justify-content: center;
+        border: none;
+        color: var(--text-2);
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .win-orb:hover {
+        color: #ffffff;
+        background: var(--glass-fill-hover);
+      }
+
+      .win-orb.close:hover {
+        background: rgba(239, 68, 68, 0.32);
+      }
+
+      /* =====================================================================
+         SUB-BAR: RIGHT FLOATING VIEW SWITCHER PILL
+         ===================================================================== */
+      .subbar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: flex-end;
+        padding: 10px 22px 0;
+      }
+
+      .view-switch {
+        height: 34px;
+        padding: 3px;
+        gap: 4px;
+      }
+
+      .view-btn {
+        width: 30px;
+        height: 28px;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        color: var(--text-3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      }
+
+      .view-btn:hover {
+        color: var(--text-1);
+      }
+
+      .view-btn.active {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.18);
+        box-shadow:
+          0 2px 8px rgba(0, 0, 0, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      }
+
+      /* =====================================================================
+         MAIN STAGE + BOTTOM FLOATING DEVICE SHOWCASE
+         ===================================================================== */
+      .stage-body {
+        position: relative;
+        z-index: 10;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 20px 24px 18px;
+        gap: 14px;
+      }
+
+      .stage-body.grid-mode {
+        justify-content: center;
+      }
+
+      .device-dock {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        transition: all 320ms var(--ease);
+      }
+
+      /* Signature Compact Smoked Liquid-Glass Device Card */
+      .device-card {
+        --mx: 50%;
+        --my: 50%;
+        position: relative;
+        width: 144px;
+        height: 164px;
+        border-radius: 16px;
+        background: linear-gradient(
+          165deg,
+          rgba(255, 255, 255, 0.105) 0%,
+          rgba(255, 255, 255, 0.042) 55%,
+          rgba(255, 255, 255, 0.068) 100%
+        );
+        backdrop-filter: blur(26px) saturate(150%);
+        -webkit-backdrop-filter: blur(26px) saturate(150%);
+        box-shadow:
+          0 20px 44px rgba(0, 0, 0, 0.48),
+          inset 0 1px 1px rgba(255, 255, 255, 0.28),
+          inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 12px 12px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: transform 280ms var(--ease), box-shadow 280ms var(--ease), background 240ms ease;
+      }
+
+      .device-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        background: linear-gradient(
+          165deg,
+          rgba(255, 255, 255, 0.14) 0%,
+          rgba(255, 255, 255, 0.055) 55%,
+          rgba(255, 255, 255, 0.09) 100%
+        );
+        box-shadow:
+          0 26px 56px rgba(0, 0, 0, 0.56),
+          inset 0 1px 1.2px rgba(255, 255, 255, 0.36);
+      }
+
+      .device-card.secondary-hidden {
+        display: none;
+      }
+
+      .stage-body.grid-mode .device-card.secondary-hidden {
+        display: flex;
+        animation: card-in 300ms var(--ease) both;
+      }
+
+      @keyframes card-in {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* Top-right folded frosted ribbon badge ("可升级 >") */
+      .upgrade-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 3;
+        padding: 4px 10px 4px 11px;
+        border-radius: 0 15px 0 12px;
+        background: rgba(255, 255, 255, 0.17);
+        border-left: 1px solid rgba(255, 255, 255, 0.16);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 11px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.94);
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        transition: background 180ms ease;
+      }
+
+      .upgrade-badge:hover {
+        background: rgba(255, 255, 255, 0.26);
+      }
+
+      .product-visual {
+        position: relative;
+        width: 84px;
+        height: 92px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 320ms var(--ease);
+      }
+
+      .device-card:hover .product-visual {
+        transform: translateY(-3px) scale(1.04);
+      }
+
+      .product-glow {
+        position: absolute;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        filter: blur(18px);
+        opacity: 0.28;
+        transition: opacity 260ms ease;
+      }
+
+      .device-card:hover .product-glow {
+        opacity: 0.48;
+      }
+
+      .device-telemetry {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.88);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tele-pair {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .footnote {
+        font-size: 11px;
+        color: var(--text-3);
+        letter-spacing: 0.02em;
+      }
+
+      /* Subtle toast when clicking controls */
+      .hud-toast {
+        position: absolute;
+        left: 50%;
+        top: 66px;
+        transform: translateX(-50%) translateY(-8px);
+        z-index: 30;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(15, 20, 28, 0.72);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 12px;
+        color: var(--text-1);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 220ms ease, transform 220ms var(--ease);
+      }
+
+      .hud-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hub-window" id="hub-window">
+      <!-- LAYER 1: Sculpted 3D Anodized Obsidian Wallpaper (100% Procedural SVG, 3 live themes!) -->
+      <div class="backdrop-stage" id="backdrop-stage">
+        <svg class="backdrop-svg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" id="backdrop-svg">
+          <defs>
+            <linearGradient id="bg-base" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#0d1118" id="stop-bg-0" />
+              <stop offset="50%" stop-color="#111722" id="stop-bg-1" />
+              <stop offset="100%" stop-color="#080b10" id="stop-bg-2" />
+            </linearGradient>
+
+            <!-- Metallic obsidian circular disc shading -->
+            <radialGradient id="disc-body" cx="38%" cy="22%" r="72%">
+              <stop offset="0%" stop-color="#3c495c" id="stop-disc-0" />
+              <stop offset="28%" stop-color="#1b222e" id="stop-disc-1" />
+              <stop offset="68%" stop-color="#0d1118" id="stop-disc-2" />
+              <stop offset="100%" stop-color="#06080c" id="stop-disc-3" />
+            </radialGradient>
+
+            <!-- Bright metallic bevel specular rim along outer edge of disc -->
+            <linearGradient id="disc-rim" x1="15%" y1="10%" x2="88%" y2="92%">
+              <stop offset="0%" stop-color="#a5b4cc" stop-opacity="0.72" />
+              <stop offset="25%" stop-color="#3c495e" stop-opacity="0.24" />
+              <stop offset="55%" stop-color="#10151f" stop-opacity="0.08" />
+              <stop offset="82%" stop-color="#6c7d96" stop-opacity="0.58" />
+              <stop offset="100%" stop-color="#dbe6f5" stop-opacity="0.88" />
+            </linearGradient>
+
+            <!-- Dramatic sweeping diagonal sculptural ribbon -->
+            <linearGradient id="ribbon-face" x1="20%" y1="0%" x2="82%" y2="100%">
+              <stop offset="0%" stop-color="#4e5e75" id="stop-rib-0" />
+              <stop offset="22%" stop-color="#222a38" id="stop-rib-1" />
+              <stop offset="55%" stop-color="#11161f" id="stop-rib-2" />
+              <stop offset="86%" stop-color="#2a3547" id="stop-rib-3" />
+              <stop offset="100%" stop-color="#7688a3" id="stop-rib-4" />
+            </linearGradient>
+
+            <linearGradient id="ribbon-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#d2deef" stop-opacity="0.7" />
+              <stop offset="50%" stop-color="#4c5c73" stop-opacity="0.28" />
+              <stop offset="100%" stop-color="#e2ecfa" stop-opacity="0.85" />
+            </linearGradient>
+
+            <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="-10" dy="26" stdDeviation="28" flood-color="#000000" flood-opacity="0.75" />
+            </filter>
+
+            <filter id="rim-glow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="5" result="b" />
+              <feMerge>
+                <feMergeNode in="b" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Deep matte base -->
+          <rect width="1200" height="720" fill="url(#bg-base)" />
+
+          <!-- Subtle background diagonal chamfered plane (left) -->
+          <path d="M -60 440 L 340 40 L 180 760 L -100 760 Z" fill="#131924" opacity="0.65" />
+          <line x1="-60" y1="440" x2="340" y2="40" stroke="rgba(200,218,242,0.16)" stroke-width="1.5" />
+
+          <!-- Subtle background diagonal ridge (bottom-right) -->
+          <path d="M 920 760 L 1280 280 L 1280 760 Z" fill="#121824" opacity="0.7" />
+          <line x1="920" y1="760" x2="1280" y2="280" stroke="rgba(180,200,228,0.14)" stroke-width="1.5" />
+
+          <!-- Massive sculpted obsidian circular sphere/disc -->
+          <g filter="url(#soft-shadow)">
+            <circle cx="570" cy="365" r="355" fill="url(#disc-body)" />
+            <circle cx="570" cy="365" r="354" fill="none" stroke="url(#disc-rim)" stroke-width="3.2" />
+            <!-- Soft inner dome sheen -->
+            <ellipse cx="485" cy="230" rx="220" ry="125" fill="rgba(180,204,236,0.06)" transform="rotate(-24 485 230)" />
+          </g>
+
+          <!-- Sweeping sculpted diagonal ribbon slicing over the sphere -->
+          <g filter="url(#soft-shadow)">
+            <path
+              d="M 105 -40 L 580 -40 C 760 120 960 320 990 465 C 1012 575 885 695 720 682 C 585 670 465 550 320 355 C 215 215 140 85 105 -40 Z"
+              fill="url(#ribbon-face)"
+            />
+            <!-- Specular top-left & bottom-right machined bevel edge -->
+            <path
+              d="M 105 -40 C 140 85 215 215 320 355 C 465 550 585 670 720 682 C 885 695 1012 575 990 465"
+              fill="none"
+              stroke="url(#ribbon-edge)"
+              stroke-width="2.6"
+              filter="url(#rim-glow)"
+            />
+            <!-- Subtle specular arc highlight on upper dome of ribbon -->
+            <path
+              d="M 300 95 C 430 62 610 135 760 285 C 835 360 880 435 882 495"
+              fill="none"
+              stroke="rgba(220,235,255,0.13)"
+              stroke-width="26"
+              stroke-linecap="round"
+              filter="url(#rim-glow)"
+            />
+          </g>
+        </svg>
+      </div>
+      <div class="backdrop-grain"></div>
+
+      <!-- Toast Feedback -->
+      <div class="hud-toast" id="hud-toast"></div>
+
+      <!-- TOP FLOATING LIQUID-GLASS NAVIGATION ISLANDS -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <!-- Brand Pill -->
+          <div class="glass-pill brand-pill" id="brand-pill" title="返回设备主页">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 18V6l6 6 6-6v12" />
+              <path d="M16 12l4-4" />
+              <path d="M16 12l4 4" />
+            </svg>
+            <span>PRISM HUB</span>
+          </div>
+
+          <!-- Primary Nav Capsule -->
+          <nav class="glass-pill nav-pill" aria-label="主导航">
+            <button class="nav-item" data-nav="神光同步">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18h6" />
+                <path d="M10 21h4" />
+                <path d="M12 3a6 6 0 0 0-3.8 10.6c.7.6 1.3 1.5 1.5 2.4h4.6c.2-.9.8-1.8 1.5-2.4A6 6 0 0 0 12 3Z" />
+              </svg>
+              <span>神光同步</span>
+            </button>
+            <button class="nav-item" data-nav="云端社区">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6.5 19h11a4.5 4.5 0 0 0 .9-8.9A6 6 0 0 0 6.8 8.4 4 4 0 0 0 6.5 19Z" />
+              </svg>
+              <span>云端社区</span>
+            </button>
+            <button class="nav-item" data-nav="官方商城">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8h12l1 12H5L6 8Z" />
+                <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+              </svg>
+              <span>官方商城</span>
+            </button>
+          </nav>
+
+          <!-- Standalone Pill Button -->
+          <button class="glass-pill single-action-pill" data-nav="体验官招募">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 4v16" />
+              <path d="M5 5h12l-2.5 4.5L17 14H5" />
+            </svg>
+            <span>体验官招募</span>
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Utility Action Island -->
+          <div class="glass-pill utility-pill">
+            <span class="avatar-dot" title="账户中心">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="9" r="3.5" />
+                <path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+              </svg>
+            </span>
+            <button class="util-btn" id="btn-refresh" title="刷新设备连接">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                <polyline points="20 4 20 9 15 9" />
+              </svg>
+            </button>
+            <button class="util-btn" data-nav="设备固件与驱动" title="设备与驱动管理">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+                <path d="M12 12l8-4.5" />
+                <path d="M12 12v9" />
+                <path d="M12 12L4 7.5" />
+              </svg>
+            </button>
+            <button class="util-btn" id="btn-wallpaper" title="切换 3D 雕塑壁纸色调（点击体验）">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 4l3-1 3 2 3-2 3 1 3 4-3 2v10H6V10L3 8l3-4Z" />
+              </svg>
+            </button>
+            <button class="util-btn" data-nav="全局设置" title="设置">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Separate Circular Smoked Glass Window Controls -->
+          <button class="glass-pill win-orb" data-nav="最小化窗口" title="最小化">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="6" y1="12" x2="18" y2="12" />
+            </svg>
+          </button>
+          <button class="glass-pill win-orb" data-nav="切换全屏" title="最大化">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="5" width="14" height="14" rx="2.5" />
+            </svg>
+          </button>
+          <button class="glass-pill win-orb close" data-nav="关闭窗口" title="关闭">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- SUB-BAR VIEW SWITCHER (Showcase vs Multi-Device Grid) -->
+      <div class="subbar">
+        <div class="glass-pill view-switch" role="tablist" aria-label="视图切换">
+          <button class="view-btn active" id="view-focus" title="聚焦展台视图">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="8.5" y="5" width="7" height="14" rx="2" />
+              <line x1="4" y1="8" x2="4" y2="16" />
+              <line x1="20" y1="8" x2="20" y2="16" />
+            </svg>
+          </button>
+          <button class="view-btn" id="view-grid" title="多设备矩阵视图">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+              <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+              <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+              <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN STAGE: BOTTOM FLOATING SMOKED-GLASS DEVICE CARD -->
+      <main class="stage-body" id="stage-body">
+        <div class="device-dock">
+          <!-- Primary Hero Device Card: Hollow Magnesium Gaming Mouse -->
+          <article class="device-card" data-device="镁合金镂空鼠标 · 2.4G">
+            <span class="upgrade-badge" data-upgrade="固件 v2.4.8 可升级">
+              <span>可升级</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 6 15 12 9 18" />
+              </svg>
+            </span>
+
+            <div class="product-visual">
+              <div class="product-glow" style="background: #f42b65"></div>
+              <!-- Handcrafted Vector Hollow Magnesium Gaming Mouse -->
+              <svg width="56" height="90" viewBox="0 0 56 90" fill="none">
+                <defs>
+                  <linearGradient id="mouse-shell" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff5385" />
+                    <stop offset="50%" stop-color="#e91e63" />
+                    <stop offset="100%" stop-color="#a81040" />
+                  </linearGradient>
+                  <linearGradient id="mouse-cavity" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#220912" />
+                    <stop offset="100%" stop-color="#0d0508" />
+                  </linearGradient>
+                </defs>
+                <!-- Outer Mouse Silhouette -->
+                <path
+                  d="M14 9 C14 4 21 2 28 2 C35 2 42 4 42 9 L46 34 C48 56 44 86 28 86 C12 86 8 56 10 34 Z"
+                  fill="url(#mouse-shell)"
+                  stroke="rgba(255,180,200,0.45)"
+                  stroke-width="1"
+                />
+                <!-- Button split & Scroll wheel -->
+                <line x1="28" y1="3" x2="28" y2="30" stroke="#45081b" stroke-width="1.6" />
+                <rect x="25.5" y="11" width="5" height="12" rx="2.5" fill="#181216" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" />
+                <line x1="26.5" y1="14" x2="29.5" y2="14" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" />
+                <line x1="26.5" y1="17" x2="29.5" y2="17" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" />
+                <line x1="26.5" y1="20" x2="29.5" y2="20" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" />
+                <!-- Hollow Triangular Magnesium Cutouts -->
+                <g fill="url(#mouse-cavity)">
+                  <polygon points="15,34 26,34 20,44" />
+                  <polygon points="30,34 41,34 36,44" />
+                  <polygon points="28,36 22,46 34,46" />
+                  <polygon points="13,47 21,47 16,58" />
+                  <polygon points="35,47 43,47 40,58" />
+                  <polygon points="23,49 33,49 28,60" />
+                  <polygon points="16,61 26,61 20,72" />
+                  <polygon points="30,61 40,61 36,72" />
+                  <polygon points="28,63 22,74 34,74" />
+                  <polygon points="23,76 33,76 28,82" />
+                </g>
+              </svg>
+            </div>
+
+            <div class="device-telemetry">
+              <span class="tele-pair">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="12" height="17" rx="2" />
+                  <line x1="10" y1="2" x2="14" y2="2" />
+                  <rect x="8.5" y="14" width="7" height="4.5" rx="0.8" fill="currentColor" stroke="none" />
+                </svg>
+                <span>30%</span>
+              </span>
+              <span class="tele-pair">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                  <path d="M5 10a10 10 0 0 1 14 0" />
+                  <path d="M8.5 13.5a5.5 5.5 0 0 1 7 0" />
+                  <circle cx="12" cy="17.5" r="1.2" fill="currentColor" stroke="none" />
+                </svg>
+                <span>2.4G</span>
+              </span>
+            </div>
+          </article>
+
+          <!-- Additional Cards Revealed in Multi-Device Grid Mode -->
+          <article class="device-card secondary-hidden" data-device="75% 磁轴键盘 · 有线">
+            <div class="product-visual">
+              <div class="product-glow" style="background: #38bdf8"></div>
+              <svg width="86" height="58" viewBox="0 0 86 58" fill="none">
+                <rect x="4" y="10" width="78" height="38" rx="6" fill="#1c222e" stroke="rgba(186,216,255,0.45)" stroke-width="1.3" />
+                <g fill="#2d3748">
+                  <rect x="9" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="18" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="27" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="36" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="45" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="54" y="15" width="7" height="6" rx="1.4" />
+                  <rect x="63" y="15" width="14" height="6" rx="1.4" fill="#38bdf8" />
+                  <rect x="9" y="24" width="10" height="6" rx="1.4" />
+                  <rect x="21" y="24" width="7" height="6" rx="1.4" />
+                  <rect x="30" y="24" width="7" height="6" rx="1.4" />
+                  <rect x="39" y="24" width="7" height="6" rx="1.4" />
+                  <rect x="48" y="24" width="7" height="6" rx="1.4" />
+                  <rect x="57" y="24" width="20" height="6" rx="1.4" />
+                  <rect x="9" y="34" width="12" height="6" rx="1.4" />
+                  <rect x="23" y="34" width="32" height="6" rx="1.4" fill="#475569" />
+                  <rect x="57" y="34" width="20" height="6" rx="1.4" />
+                </g>
+              </svg>
+            </div>
+            <div class="device-telemetry">
+              <span>8000Hz</span>
+              <span style="opacity: 0.45">·</span>
+              <span>USB-C</span>
+            </div>
+          </article>
+
+          <article class="device-card secondary-hidden" data-device="磁吸充电底座 · 待机">
+            <div class="product-visual">
+              <div class="product-glow" style="background: #a78bfa"></div>
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <ellipse cx="36" cy="52" rx="24" ry="8" fill="#171d28" stroke="rgba(210,196,255,0.38)" stroke-width="1.2" />
+                <path d="M18 46 L26 22 C28 16 44 16 46 22 L54 46 Z" fill="#232a3a" stroke="rgba(210,196,255,0.4)" stroke-width="1.2" />
+                <circle cx="36" cy="34" r="5" fill="#a78bfa" opacity="0.85" />
+              </svg>
+            </div>
+            <div class="device-telemetry">
+              <span>100%</span>
+              <span style="opacity: 0.45">·</span>
+              <span>DOCK</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="footnote">所有设备不支持蓝牙模式连接驱动</div>
+      </main>
+    </div>
+
+    <script>
+      const hubWindow = document.getElementById('hub-window');
+      const backdropStage = document.getElementById('backdrop-stage');
+      const stageBody = document.getElementById('stage-body');
+      const toastEl = document.getElementById('hud-toast');
+      let toastTimer = 0;
+
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), 2200);
+      }
+
+      // 1. Subtle pointer specular sheen across all liquid-glass pills & device cards + gentle 3D backdrop parallax
+      const glassTargets = Array.from(document.querySelectorAll('.glass-pill, .device-card'));
+      hubWindow.addEventListener(
+        'pointermove',
+        (e) => {
+          const wRect = hubWindow.getBoundingClientRect();
+          const nx = (e.clientX - wRect.left) / wRect.width - 0.5;
+          const ny = (e.clientY - wRect.top) / wRect.height - 0.5;
+          backdropStage.style.transform = `translate3d(${(-nx * 14).toFixed(1)}px, ${(-ny * 10).toFixed(1)}px, 0) scale(1.03)`;
+
+          for (const el of glassTargets) {
+            const r = el.getBoundingClientRect();
+            el.style.setProperty('--mx', `${(e.clientX - r.left).toFixed(1)}px`);
+            el.style.setProperty('--my', `${(e.clientY - r.top).toFixed(1)}px`);
+          }
+        },
+        { passive: true },
+      );
+
+      hubWindow.addEventListener('pointerleave', () => {
+        backdropStage.style.transform = 'translate3d(0, 0, 0) scale(1)';
+      });
+
+      // 2. Interactive Top Nav
+      document.querySelectorAll('.nav-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          showToast(`已切换模块：${btn.dataset.nav}`);
+        });
+      });
+
+      document.querySelectorAll('[data-nav]:not(.nav-item)').forEach((btn) => {
+        btn.addEventListener('click', () => showToast(btn.dataset.nav));
+      });
+
+      document.getElementById('brand-pill').addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
+        showToast('已返回设备主页');
+      });
+
+      document.getElementById('btn-refresh').addEventListener('click', (e) => {
+        const svg = e.currentTarget.querySelector('svg');
+        svg.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], {
+          duration: 520,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        });
+        showToast('正在扫描 USB / 2.4G 外设连接...');
+      });
+
+      // 3. Working View Switcher (Bottom Single Focus vs Multi-Device Grid)
+      const btnFocus = document.getElementById('view-focus');
+      const btnGrid = document.getElementById('view-grid');
+      btnFocus.addEventListener('click', () => {
+        btnFocus.classList.add('active');
+        btnGrid.classList.remove('active');
+        stageBody.classList.remove('grid-mode');
+        showToast('已切换到聚焦展台视图');
+      });
+      btnGrid.addEventListener('click', () => {
+        btnGrid.classList.add('active');
+        btnFocus.classList.remove('active');
+        stageBody.classList.add('grid-mode');
+        showToast('已切换到多设备矩阵视图');
+      });
+
+      // 4. Sculpted 3D Wallpaper Theme Switcher (T-shirt icon)
+      const themes = [
+        { name: '深邃黑曜雕塑（默认）', filter: 'none' },
+        { name: '冷冽液态钛银', filter: 'brightness(1.16) contrast(1.06) saturate(0.75)' },
+        { name: '深海幽蓝棱镜', filter: 'hue-rotate(14deg) saturate(1.55) brightness(1.06)' },
+      ];
+      let themeIdx = 0;
+      document.getElementById('btn-wallpaper').addEventListener('click', () => {
+        themeIdx = (themeIdx + 1) % themes.length;
+        backdropStage.style.filter = themes[themeIdx].filter;
+        showToast(`壁纸质感：${themes[themeIdx].name}`);
+      });
+
+      // 5. Device card & upgrade badge clicks
+      document.querySelectorAll('.device-card').forEach((card) => {
+        card.addEventListener('click', () => showToast(`打开设备配置：${card.dataset.device}`));
+      });
+      document.querySelectorAll('.upgrade-badge').forEach((badge) => {
+        badge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showToast(badge.dataset.upgrade);
+        });
+      });
+    </script>
+  </body>
+</html>

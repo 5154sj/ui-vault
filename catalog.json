@@ -1,9 +1,43 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-26T12:29:28.750Z",
+  "updatedAt": "2026-11-28T10:21:47.422Z",
   "repoPath": "C:\\UI\\ui-vault",
-  "count": 2,
+  "count": 3,
   "items": [
+    {
+      "id": "2026-11-smoked-liquid-glass-hub",
+      "dir": "items/2026-11-smoked-liquid-glass-hub",
+      "title": "烟熏液态玻璃硬件驱动中心（Smoked Liquid Glass & Sculpted Obsidian）",
+      "kind": "layout",
+      "theme": "dark",
+      "summary": "深邃雕塑黑曜石 3D 磨砂曲面背景 + 悬浮分离式烟熏液态玻璃胶囊顶栏（双层折射高光描边）+ 底部聚焦式磨砂硬件设备卡片，具备极强的工业旗舰桌面端高级质感。",
+      "tags": [
+        "liquid-glass",
+        "glassmorphism",
+        "smoked-glass",
+        "dark",
+        "obsidian",
+        "hardware-hub",
+        "floating-pills",
+        "desktop-app",
+        "minimal",
+        "layout"
+      ],
+      "source": "Clean-room 视觉质感拆解复刻（参考暗黑液态玻璃硬件控制中心截图）",
+      "stack": [
+        "html-css",
+        "react-tailwind"
+      ],
+      "createdAt": "2026-11-28",
+      "files": {
+        "spec": "items/2026-11-smoked-liquid-glass-hub/spec.md",
+        "tokens": "items/2026-11-smoked-liquid-glass-hub/tokens.json",
+        "preview": "items/2026-11-smoked-liquid-glass-hub/preview.html",
+        "snippet": "items/2026-11-smoked-liquid-glass-hub/snippet.tsx",
+        "sourceDir": null,
+        "previewImage": null
+      }
+    },
     {
       "id": "2026-11-rgb-prism-rim-hover",
       "dir": "items/2026-11-rgb-prism-rim-hover",
